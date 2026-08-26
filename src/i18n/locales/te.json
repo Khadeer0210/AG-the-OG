@@ -1,0 +1,8 @@
+{
+  "app_name": "అగ్రి విజన్",
+  "tagline": "కృషి సారథి — మీ AI వ్యవసాయ సలహాదారు",
+  "nav": { "dashboard": "డ్యాష్‌బోర్డ్", "my_farm": "నా పొలం", "plant_health": "మొక్క ఆరోగ్యం", "weather": "వాతావరణం", "advisory": "సలహా చాట్", "insurance": "పంట బీమా", "library": "పంట గ్రంథాలయం", "impact": "మా ప్రభావం", "notifications": "నోటిఫికేషన్లు", "profile": "ప్రొఫైల్", "logout": "లాగ్ అవుట్" },
+  "auth": { "login": "లాగిన్", "register": "నమోదు", "email": "ఇమెయిల్", "password": "పాస్‌వర్డ్", "name": "పూర్తి పేరు", "phone": "ఫోన్ నంబర్", "village": "గ్రామం", "welcome": "తిరిగి స్వాగతం, రైతు!" },
+  "dashboard": { "greeting": "{{timeOfDay}} శుభాకాంక్షలు, {{name}}!", "morning": "ఉదయం", "afternoon": "మధ్యాహ్నం", "evening": "సాయంత్రం", "ai_suggest": "AI పంట సూచన", "your_farms": "మీ పొలాలు", "total_crops": "మొత్తం పంటలు", "healthy": "ఆరోగ్యకరం", "alerts": "చురుకైన హెచ్చరికలు", "my_crops": "నా పంటలు" },
+  "common": { "loading": "లోడ్ అవుతోంది...", "error": "ఏదో తప్పు జరిగింది", "save": "సేవ్", "cancel": "రద్దు", "rs": "₹" }
+}

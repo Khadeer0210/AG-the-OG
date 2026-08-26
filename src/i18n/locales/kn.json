@@ -1,0 +1,8 @@
+{
+  "app_name": "ಅಗ್ರಿ ವಿಷನ್",
+  "tagline": "ಕೃಷಿ ಸಾರಥಿ — ನಿಮ್ಮ AI ಕೃಷಿ ಸಲಹೆಗಾರ",
+  "nav": { "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್", "my_farm": "ನನ್ನ ಹೊಲ", "plant_health": "ಸಸ್ಯ ಆರೋಗ್ಯ", "weather": "ಹವಾಮಾನ", "advisory": "ಸಲಹೆ ಚಾಟ್", "insurance": "ಬೆಳೆ ವಿಮೆ", "library": "ಬೆಳೆ ಗ್ರಂಥಾಲಯ", "impact": "ನಮ್ಮ ಪ್ರಭಾವ", "notifications": "ಅಧಿಸೂಚನೆಗಳು", "profile": "ಪ್ರೊಫೈಲ್", "logout": "ಲಾಗ್ ಔಟ್" },
+  "auth": { "login": "ಲಾಗಿನ್", "register": "ನೋಂದಣಿ", "email": "ಇಮೇಲ್", "password": "ಪಾಸ್‌ವರ್ಡ್", "name": "ಪೂರ್ಣ ಹೆಸರು", "phone": "ದೂರವಾಣಿ ಸಂಖ್ಯೆ", "village": "ಗ್ರಾಮ", "welcome": "ಮತ್ತೆ ಸ್ವಾಗತ, ರೈತ!" },
+  "dashboard": { "greeting": "ಶುಭ {{timeOfDay}}, {{name}}!", "morning": "ಬೆಳಗ್ಗೆ", "afternoon": "ಮಧ್ಯಾಹ್ನ", "evening": "ಸಂಜೆ", "ai_suggest": "AI ಬೆಳೆ ಸಲಹೆ", "your_farms": "ನಿಮ್ಮ ಹೊಲಗಳು", "total_crops": "ಒಟ್ಟು ಬೆಳೆಗಳು", "healthy": "ಆರೋಗ್ಯಕರ", "alerts": "ಸಕ್ರಿಯ ಎಚ್ಚರಿಕೆಗಳು", "my_crops": "ನನ್ನ ಬೆಳೆಗಳು" },
+  "common": { "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...", "error": "ಏನೋ ತಪ್ಪಾಗಿದೆ", "save": "ಉಳಿಸಿ", "cancel": "ರದ್ದು", "rs": "₹" }
+}

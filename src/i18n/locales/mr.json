@@ -1,0 +1,8 @@
+{
+  "app_name": "ॲग्री व्हिजन",
+  "tagline": "कृषी सारथी — तुमचा AI शेती सल्लागार",
+  "nav": { "dashboard": "डॅशबोर्ड", "my_farm": "माझं शेत", "plant_health": "वनस्पती आरोग्य", "weather": "हवामान", "advisory": "सल्लागार चॅट", "insurance": "पीक विमा", "library": "पीक ग्रंथालय", "impact": "आमचा प्रभाव", "notifications": "सूचना", "profile": "प्रोफाईल", "logout": "बाहेर पडा" },
+  "auth": { "login": "लॉगिन", "register": "नोंदणी", "email": "ईमेल", "password": "पासवर्ड", "name": "पूर्ण नाव", "phone": "फोन नंबर", "village": "गाव", "welcome": "पुन्हा स्वागत, शेतकरी!" },
+  "dashboard": { "greeting": "शुभ {{timeOfDay}}, {{name}}!", "morning": "सकाळ", "afternoon": "दुपार", "evening": "संध्याकाळ", "ai_suggest": "AI पीक सूचना", "your_farms": "तुमची शेतं", "total_crops": "एकूण पिके", "healthy": "निरोगी", "alerts": "सक्रिय सूचना", "my_crops": "माझी पिके" },
+  "common": { "loading": "लोड होत आहे...", "error": "काहीतरी चूक झाली", "save": "जतन करा", "cancel": "रद्द करा", "rs": "₹" }
+}

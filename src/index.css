@@ -1,0 +1,285 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans:ital,wght@0,300..900;1,300..900&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Kannada:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* ══════════════════════════════════════════════════════════
+   AGRI VISION — "Monsoon Soul" God-Level Design System
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Theme Tokens ── */
+@theme {
+  --color-canvas: #FAF6EE;
+  --color-card: #FFFDF7;
+  --color-card-border: #EAE1D2;
+  --color-ink: #2B2620;
+  --color-muted: #7A6F60;
+
+  --color-paddy: #2F7D4F;
+  --color-paddy-dark: #1E5434;
+  --color-paddy-soft: #E4F3E7;
+  --color-rain: #3E7CB1;
+  --color-rain-dark: #275279;
+  --color-rain-soft: #E3EEF7;
+  --color-turmeric: #E2A72E;
+  --color-turmeric-dark: #B5801B;
+  --color-turmeric-soft: #FBF3DF;
+  --color-laterite: #C05B2E;
+  --color-laterite-soft: #F8E8DE;
+  --color-alert: #B3402F;
+  --color-alert-soft: #FBEAE6;
+
+  --font-display: 'Outfit', 'Baloo 2', 'Noto Sans Devanagari', cursive;
+  --font-body: 'Noto Sans', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Devanagari', system-ui, sans-serif;
+
+  --radius-card: 16px;
+  --shadow-card: 0 4px 20px rgba(60, 45, 20, 0.05), 0 1px 3px rgba(60, 45, 20, 0.03);
+  --shadow-card-hover: 0 12px 32px rgba(60, 45, 20, 0.12), 0 2px 8px rgba(60, 45, 20, 0.06);
+
+  --ease-monsoon: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Keyframes & Animations ── */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(47, 125, 79, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(47, 125, 79, 0.45); }
+}
+
+@keyframes vine-grow {
+  from { width: 0%; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes waveMove {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(-25%); }
+  100% { transform: translateX(0); }
+}
+
+/* ── Base Styles ── */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-ink);
+  letter-spacing: -0.01em;
+}
+
+/* ── Glassmorphic & Modern Cards ── */
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fade-up 0.4s var(--ease-monsoon) backwards;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-3px);
+}
+
+.glass-panel {
+  background: rgba(255, 253, 247, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(234, 225, 210, 0.7);
+}
+
+.gradient-text-paddy {
+  background: linear-gradient(135deg, var(--color-paddy) 0%, var(--color-rain) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-sun {
+  background: linear-gradient(135deg, var(--color-turmeric) 0%, var(--color-laterite) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Floating Animation Utility ── */
+.animate-float {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+/* ── Status Chips ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip-healthy { background: var(--color-paddy-soft); color: var(--color-paddy); border: 1px solid rgba(47, 125, 79, 0.2); }
+.chip-warning { background: var(--color-turmeric-soft); color: #8f6500; border: 1px solid rgba(226, 167, 46, 0.3); }
+.chip-danger { background: var(--color-alert-soft); color: var(--color-alert); border: 1px solid rgba(179, 64, 47, 0.2); }
+.chip-info { background: var(--color-rain-soft); color: var(--color-rain); border: 1px solid rgba(62, 124, 177, 0.2); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-turmeric) 0%, var(--color-turmeric-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(226, 167, 46, 0.25);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(226, 167, 46, 0.4);
+}
+
+.btn-paddy {
+  background: linear-gradient(135deg, var(--color-paddy) 0%, var(--color-paddy-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(47, 125, 79, 0.25);
+}
+.btn-paddy:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(47, 125, 79, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--color-card-border);
+  color: var(--color-ink);
+}
+.btn-outline:hover {
+  border-color: var(--color-paddy);
+  color: var(--color-paddy);
+  background: var(--color-paddy-soft);
+}
+
+/* ── Inputs ── */
+.input {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1.5px solid var(--color-card-border);
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  background: var(--color-card);
+  color: var(--color-ink);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--color-paddy);
+  box-shadow: 0 0 0 4px rgba(47, 125, 79, 0.12);
+}
+
+/* ── Vine Progress Bar ── */
+.vine-bar {
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--color-card-border);
+  overflow: hidden;
+}
+
+.vine-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--color-paddy-soft), var(--color-paddy));
+  transform-origin: left;
+  animation: vine-grow 1.5s var(--ease-monsoon) forwards;
+}
+
+/* ── Alert Banners ── */
+.alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-card);
+  border-left: 4px solid;
+}
+
+.alert-banner.severity-red {
+  background: var(--color-alert-soft);
+  border-left-color: var(--color-alert);
+}
+
+.alert-banner.severity-amber {
+  background: var(--color-turmeric-soft);
+  border-left-color: var(--color-turmeric);
+}
+
+.alert-banner.severity-blue {
+  background: var(--color-rain-soft);
+  border-left-color: var(--color-rain);
+}
+
+/* ── Leaflet Z-Index Safety ── */
+.leaflet-container {
+  font-family: var(--font-body) !important;
+  border-radius: var(--radius-card);
+  z-index: 10 !important;
+}
+
+.leaflet-control-container {
+  z-index: 20 !important;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-card-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
