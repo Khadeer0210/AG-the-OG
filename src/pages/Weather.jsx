@@ -1,385 +1,406 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Line, Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Filler, Tooltip, Legend } from 'chart.js'
-import { CloudSun, Droplets, Thermometer, Wind, Sun, CloudRain, Sparkles, Loader2, MapPin, AlertTriangle, Eye, Navigation } from 'lucide-react'
+import { CloudSun, Droplets, Thermometer, Wind, Sun, CloudRain, Sparkles, Loader2, MapPin, AlertTriangle, Eye, Navigation, Layers, ShieldAlert, Waves } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
 import { useAIStatus } from '../context/AIStatusContext'
+import { fetchFieldWeather, predictFieldRisks } from '../services/weatherService'
+import { generateBulletin } from '../services/ollamaService'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Filler, Tooltip, Legend)
 
 export default function Weather() {
   const { t, i18n } = useTranslation()
-  const { location, weather, weatherLoading, getAIContext } = useAppContext()
+  const { location, farms } = useAppContext()
   const { isAIUnavailable } = useAIStatus()
-  const [tab, setTab] = useState('hourly')
-  const [hourly, setHourly] = useState(null)
-  const [daily, setDaily] = useState(null)
-  const [climate, setClimate] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [selectedFarm, setSelectedFarm] = useState(null)
+  const [weatherData, setWeatherData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState('overview')
   const [advisory, setAdvisory] = useState('')
   const [advisoryLoading, setAdvisoryLoading] = useState(false)
 
-  // Fetch hourly by default on mount when location is ready
+  // Default to first farm or location
   useEffect(() => {
-    if (!location?.lat) return
-    if (tab === 'hourly' && !hourly) fetchHourly()
-    if (tab === 'daily' && !daily) fetchDaily()
-    if (tab === 'climate' && !climate) fetchClimate()
-  }, [tab, location?.lat])
+    if (farms.length > 0 && !selectedFarm) {
+      setSelectedFarm(farms[0])
+    }
+  }, [farms])
 
-  const fetchHourly = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/weather.php?action=hourly&lat=${location.lat}&lng=${location.lng}`)
-      if (res.ok) {
-        const data = await res.json()
-        setHourly(data.hourly || [])
-      } else {
-        await fetchHourlyDirect()
+  const targetLat = selectedFarm?.lat || location?.lat || 20.5937
+  const targetLng = selectedFarm?.lng || location?.lng || 78.9629
+  const locationLabel = selectedFarm ? selectedFarm.name : (location?.display || 'Current Location')
+
+  useEffect(() => {
+    let isMounted = true
+    async function loadData() {
+      setLoading(true)
+      const data = await fetchFieldWeather(targetLat, targetLng)
+      if (isMounted) {
+        setWeatherData(data)
+        setLoading(false)
       }
-    } catch {
-      await fetchHourlyDirect()
-    } finally {
-      setLoading(false)
     }
-  }
+    loadData()
+    return () => { isMounted = false }
+  }, [targetLat, targetLng])
 
-  const fetchHourlyDirect = async () => {
-    try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lng}&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation&forecast_hours=24&timezone=auto`
-      const res = await fetch(url)
-      const data = await res.json()
-      const h = data.hourly || {}
-      const result = (h.time || []).map((t, i) => ({
-        time: t,
-        temp: h.temperature_2m?.[i] ?? 0,
-        humidity: h.relative_humidity_2m?.[i] ?? 0,
-        rain_prob: h.precipitation_probability?.[i] ?? 0,
-        precipitation: h.precipitation?.[i] ?? 0,
-      }))
-      setHourly(result)
-    } catch {
-      setHourly([])
-    }
-  }
+  const mlPredictions = useMemo(() => {
+    if (!weatherData?.analytics) return null
+    return predictFieldRisks(
+      {
+        soil_moisture_shallow: weatherData.soilData?.[weatherData.soilData.length - 1]?.soil_moisture_1_3cm,
+        total_rain_7d: weatherData.analytics.total_rain_7d,
+        forecast_rain: weatherData.analytics.forecast_rain_total,
+        dry_spell_days: weatherData.analytics.dry_spell,
+        current_humidity: weatherData.current?.humidity,
+        current_temp: weatherData.current?.temp,
+        heat_stress_days: weatherData.analytics.heat_stress_days,
+      },
+      selectedFarm?.crop || '',
+      selectedFarm?.growth_stage || ''
+    )
+  }, [weatherData, selectedFarm])
 
-  const fetchDaily = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/weather.php?action=daily&lat=${location.lat}&lng=${location.lng}`)
-      if (res.ok) {
-        const data = await res.json()
-        setDaily(data.daily || [])
-      } else {
-        await fetchDailyDirect()
-      }
-    } catch {
-      await fetchDailyDirect()
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchDailyDirect = async () => {
-    try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lng}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&forecast_days=7&timezone=auto`
-      const res = await fetch(url)
-      const data = await res.json()
-      const d = data.daily || {}
-      const codeToIcon = (c) => c <= 1 ? '☀️' : c <= 3 ? '⛅' : c <= 55 ? '🌦️' : c <= 65 ? '🌧️' : c <= 82 ? '🌧️' : '⛈️'
-      const result = (d.time || []).map((t, i) => ({
-        date: t,
-        temp_max: d.temperature_2m_max?.[i] ?? 0,
-        temp_min: d.temperature_2m_min?.[i] ?? 0,
-        precipitation: d.precipitation_sum?.[i] ?? 0,
-        rain_prob: d.precipitation_probability_max?.[i] ?? 0,
-        icon: codeToIcon(d.weather_code?.[i] ?? 0),
-      }))
-      setDaily(result)
-    } catch {
-      setDaily([])
-    }
-  }
-
-  const fetchClimate = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/weather.php?action=climate&lat=${location.lat}&lng=${location.lng}`)
-      if (res.ok) {
-        const data = await res.json()
-        setClimate(data)
-      }
-    } catch { /* Climate fallback */ }
-    setLoading(false)
-  }
-
-  const fetchAdvisory = async () => {
+  const handleGenerateAdvisory = async () => {
+    if (!weatherData?.current) return
     setAdvisoryLoading(true)
+    setAdvisory('')
+    const weatherSummary = `Temp: ${weatherData.current.temp}°C, Humidity: ${weatherData.current.humidity}%, Weather: ${weatherData.current.weather_desc}, 7-Day Forecast Rain: ${weatherData.analytics.forecast_rain_total.toFixed(1)}mm`
     try {
-      const ctx = getAIContext()
-      const { generateBulletin } = await import('../services/ollamaService')
-      const data = await generateBulletin(
-        ctx.weather || '',
-        location?.display || 'your area',
-        i18n.language,
-        ctx
-      )
-      setAdvisory(data.bulletin || '')
+      const res = await generateBulletin(weatherSummary, locationLabel, i18n.language)
+      setAdvisory(res.bulletin || 'Failed to generate advisory.')
     } catch {
-      setAdvisory('')
+      setAdvisory('Error connecting to Ollama AI.')
     } finally {
       setAdvisoryLoading(false)
     }
   }
 
-  const chartOpts = {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#7A6F60' } },
-      y: { grid: { color: '#EAE1D240' }, ticks: { font: { size: 11 }, color: '#7A6F60' } },
-    },
-  }
-
-  const hourlyChartData = hourly ? {
-    labels: hourly.map(h => {
-      const d = new Date(h.time)
-      return d.getHours() + ':00'
-    }),
-    datasets: [
-      {
-        label: t('weather.temp'),
-        data: hourly.map(h => h.temp),
-        borderColor: '#E2A72E',
-        backgroundColor: (context) => {
-          const ctx = context.chart.ctx
-          const gradient = ctx.createLinearGradient(0, 0, 0, 200)
-          gradient.addColorStop(0, 'rgba(226, 167, 46, 0.35)')
-          gradient.addColorStop(1, 'rgba(226, 167, 46, 0.0)')
-          return gradient
+  // Chart data setup
+  const hourlyChartData = useMemo(() => {
+    if (!weatherData?.hourly) return null
+    const hours = weatherData.hourly.slice(0, 24)
+    return {
+      labels: hours.map(h => new Date(h.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
+      datasets: [
+        {
+          label: 'Temperature (°C)',
+          data: hours.map(h => h.temp),
+          borderColor: '#E2A72E',
+          backgroundColor: 'rgba(226, 167, 46, 0.1)',
+          fill: true,
+          yAxisID: 'y',
         },
-        fill: true,
-        tension: 0.45,
-        pointRadius: 4,
-        pointBackgroundColor: '#E2A72E',
-      },
-    ],
-  } : null
+        {
+          label: 'Precipitation Prob (%)',
+          data: hours.map(h => h.precip_probability),
+          borderColor: '#3E7CB1',
+          backgroundColor: 'rgba(62, 124, 177, 0.2)',
+          type: 'bar',
+          yAxisID: 'y1',
+        },
+      ],
+    }
+  }, [weatherData])
 
-  const rainChartData = hourly ? {
-    labels: hourly.map(h => {
-      const d = new Date(h.time)
-      return d.getHours() + ':00'
-    }),
-    datasets: [
-      {
-        label: t('weather.rain') + ' %',
-        data: hourly.map(h => h.rain_prob),
-        backgroundColor: 'rgba(62, 124, 177, 0.7)',
-        borderColor: '#3E7CB1',
-        borderWidth: 1.5,
-        borderRadius: 8,
-      },
-    ],
-  } : null
+  const historicalChartData = useMemo(() => {
+    if (!weatherData?.historical) return null
+    const days = weatherData.historical.slice(-30) // last 30 days
+    return {
+      labels: days.map(d => d.date.split('-').slice(1).join('/')),
+      datasets: [
+        {
+          label: 'Max Temp (°C)',
+          data: days.map(d => d.temp_max),
+          borderColor: '#E2A72E',
+          backgroundColor: 'transparent',
+          tension: 0.3,
+        },
+        {
+          label: 'Min Temp (°C)',
+          data: days.map(d => d.temp_min),
+          borderColor: '#2F7D4F',
+          backgroundColor: 'transparent',
+          tension: 0.3,
+        },
+        {
+          label: 'Rainfall (mm)',
+          data: days.map(d => d.rain),
+          borderColor: '#3E7CB1',
+          backgroundColor: 'rgba(62, 124, 177, 0.4)',
+          type: 'bar',
+        },
+      ],
+    }
+  }, [weatherData])
 
-  const getDayName = (dateStr) => {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString(i18n.language === 'en' ? 'en-IN' : `${i18n.language}-IN`, { weekday: 'short', month: 'short', day: 'numeric' })
-  }
+  const soilChartData = useMemo(() => {
+    if (!weatherData?.soilData) return null
+    const days = weatherData.soilData.slice(-14) // last 14 days
+    return {
+      labels: days.map(d => d.date.split('-').slice(1).join('/')),
+      datasets: [
+        {
+          label: 'Soil Temp 0cm (°C)',
+          data: days.map(d => d.soil_temp_0cm),
+          borderColor: '#D97706',
+          backgroundColor: 'transparent',
+          tension: 0.3,
+        },
+        {
+          label: 'Shallow Moisture (1-3cm)',
+          data: days.map(d => (d.soil_moisture_1_3cm * 100).toFixed(1)),
+          borderColor: '#2563EB',
+          backgroundColor: 'rgba(37, 99, 235, 0.1)',
+          fill: true,
+          tension: 0.3,
+        },
+      ],
+    }
+  }, [weatherData])
+
+  const curr = weatherData?.current
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Top Title Banner */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-6">
+      {/* Header + Selector */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl m-0" style={{ fontFamily: 'var(--font-display)' }}>
-            {t('weather.title')} 🌤️
+          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+            {t('weather.title')} 🌦️
           </h1>
-          <p className="text-xs sm:text-sm flex items-center gap-1.5 mt-1" style={{ color: 'var(--color-muted)' }}>
-            <MapPin size={14} style={{ color: 'var(--color-paddy)' }} /> {location?.display || t('common.loading')}
+          <p className="text-sm text-muted" style={{ color: 'var(--color-muted)' }}>
+            Field-centric microclimate, 61-day historical trends & ML predictive analytics
           </p>
         </div>
-      </div>
 
-      {/* Hero Weather Card */}
-      <div className="card p-6 sm:p-8 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #1E5434 0%, #2F7D4F 50%, #3E7CB1 100%)', color: '#fff' }}>
-        {weatherLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 size={32} className="animate-spin text-white opacity-80" />
-          </div>
-        ) : weather ? (
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="w-20 h-20 rounded-3xl bg-white/15 backdrop-blur-md flex items-center justify-center text-5xl shadow-inner border border-white/20 animate-float">
-                {weather.icon || '🌡️'}
-              </div>
-              <div>
-                <div className="text-5xl sm:text-6xl font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                  {Math.round(weather.temp)}°C
-                </div>
-                <div className="text-sm font-medium opacity-90 flex items-center gap-2 mt-1">
-                  <span>{weather.condition}</span>
-                  <span className="opacity-40">•</span>
-                  <span>{t('weather.feels_like')} {Math.round(weather.feels_like)}°C</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Weather Metrics Pill Grid */}
-            <div className="w-full md:w-auto grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { icon: Droplets, label: t('weather.humidity'), val: `${weather.humidity}%` },
-                { icon: Wind, label: t('weather.wind'), val: `${weather.wind_speed} km/h` },
-                { icon: CloudRain, label: t('weather.rain'), val: `${weather.precipitation || 0} mm` },
-                { icon: Navigation, label: 'Wind Dir', val: `${weather.wind_direction || 180}°` },
-              ].map(({ icon: Icon, label, val }, i) => (
-                <div key={i} className="px-4 py-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 text-center min-w-[100px]">
-                  <Icon size={18} className="mx-auto mb-1 opacity-90" />
-                  <div className="text-[11px] opacity-75 font-medium">{label}</div>
-                  <div className="text-sm font-extrabold mt-0.5">{val}</div>
-                </div>
+        {/* Field Selector Pill */}
+        {farms.length > 0 && (
+          <div className="flex items-center gap-2 p-1.5 rounded-xl border bg-card"
+            style={{ background: 'var(--color-card)', borderColor: 'var(--color-card-border)' }}>
+            <MapPin size={16} style={{ color: 'var(--color-paddy)' }} />
+            <select
+              value={selectedFarm?.id || ''}
+              onChange={e => {
+                const f = farms.find(farm => farm.id === parseInt(e.target.value))
+                setSelectedFarm(f || null)
+              }}
+              className="text-sm font-semibold bg-transparent border-none outline-none cursor-pointer"
+              style={{ color: 'var(--color-ink)' }}>
+              <option value="">Current GPS Location</option>
+              {farms.map(f => (
+                <option key={f.id} value={f.id}>{f.name} ({f.area_ha} ha)</option>
               ))}
-            </div>
+            </select>
           </div>
-        ) : (
-          <p className="text-sm text-center py-6 opacity-80">{t('common.no_data')}</p>
         )}
       </div>
 
-      {/* Weather Forecast & Pattern Tabs */}
-      <div className="flex gap-2 p-1.5 rounded-2xl glass-panel" style={{ border: '1px solid var(--color-card-border)' }}>
-        {[
-          { id: 'hourly', label: '24-Hour Curve', icon: CloudSun },
-          { id: 'daily', label: '7-Day Monsoon Forecast', icon: CloudRain },
-          { id: 'climate', label: 'Climate Anomalies & AI', icon: Sparkles },
-        ].map(tb => {
-          const Icon = tb.icon
-          const isActive = tab === tb.id
-          return (
-            <button key={tb.id} onClick={() => setTab(tb.id)}
-              className="flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
-              style={{
-                background: isActive ? 'linear-gradient(135deg, var(--color-paddy) 0%, var(--color-paddy-dark) 100%)' : 'transparent',
-                color: isActive ? '#fff' : 'var(--color-muted)',
-                boxShadow: isActive ? '0 4px 14px rgba(47, 125, 79, 0.25)' : 'none',
-                border: 'none',
-              }}>
-              <Icon size={16} /> {tb.label}
-            </button>
-          )
-        })}
-      </div>
-
-      {loading && (
+      {loading ? (
         <div className="card p-12 text-center">
-          <Loader2 size={28} className="animate-spin mx-auto" style={{ color: 'var(--color-rain)' }} />
-          <p className="text-sm mt-3" style={{ color: 'var(--color-muted)' }}>Fetching live meteorological patterns...</p>
+          <Loader2 size={32} className="animate-spin mx-auto mb-3" style={{ color: 'var(--color-paddy)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Fetching Open-Meteo field microclimate data...</p>
         </div>
-      )}
-
-      {/* Hourly Curves */}
-      {tab === 'hourly' && !loading && hourly && hourlyChartData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="card p-5">
-            <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
-              <Thermometer size={16} style={{ color: 'var(--color-turmeric)' }} /> 24-Hour Temperature Curve (°C)
-            </h3>
-            <div style={{ height: 240 }}><Line data={hourlyChartData} options={chartOpts} /></div>
-          </div>
-          <div className="card p-5">
-            <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
-              <CloudRain size={16} style={{ color: 'var(--color-rain)' }} /> 24-Hour Rain Probability (%)
-            </h3>
-            <div style={{ height: 240 }}><Bar data={rainChartData} options={chartOpts} /></div>
-          </div>
-        </div>
-      )}
-
-      {/* 7-Day Monsoon Forecast */}
-      {tab === 'daily' && !loading && daily && daily.length > 0 && (
-        <div className="card overflow-hidden">
-          <div className="px-6 py-4 border-b flex justify-between items-center bg-white/50" style={{ borderColor: 'var(--color-card-border)' }}>
-            <h3 className="text-sm font-bold m-0" style={{ fontFamily: 'var(--font-display)' }}>7-Day Micro-Climate Trend</h3>
-            <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
-              <CloudRain size={13} /> Open-Meteo High Resolution Model
-            </span>
-          </div>
-          <div className="divide-y" style={{ borderColor: 'var(--color-card-border)' }}>
-            {daily.map((d, i) => (
-              <div key={i} className="flex items-center px-6 py-4 gap-4 transition-colors hover:bg-black/[0.02]">
-                <div className="w-28 text-xs font-bold" style={{ color: 'var(--color-ink)' }}>{getDayName(d.date)}</div>
-                <div className="text-2xl w-10 text-center">{d.icon}</div>
-                <div className="flex-1 flex items-center gap-3">
-                  <span className="text-sm font-extrabold text-amber-600 w-10">{Math.round(d.temp_max)}°C</span>
-                  <div className="flex-1 h-2.5 rounded-full overflow-hidden bg-amber-100/60">
-                    <div className="h-full rounded-full" style={{
-                      width: `${Math.min(100, Math.max(15, ((d.temp_max - 10) / 30) * 100))}%`,
-                      background: `linear-gradient(90deg, #3E7CB1 0%, #E2A72E 100%)`,
-                    }} />
+      ) : weatherData ? (
+        <>
+          {/* Main Weather Card */}
+          <div className="card p-6 relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(47,125,79,0.08) 0%, rgba(62,124,177,0.08) 100%)',
+              borderColor: 'var(--color-card-border)'
+            }}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              {/* Temp & Icon */}
+              <div className="flex items-center gap-4">
+                <div className="text-5xl">{curr?.weather_icon || '☀️'}</div>
+                <div>
+                  <div className="text-4xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>
+                    {curr?.temp}°C
                   </div>
-                  <span className="text-xs font-semibold text-slate-500 w-10">{Math.round(d.temp_min)}°C</span>
-                </div>
-                <div className="flex items-center gap-1.5 w-20 justify-end">
-                  <Droplets size={14} style={{ color: 'var(--color-rain)' }} />
-                  <span className="text-xs font-extrabold" style={{ color: d.rain_prob > 40 ? 'var(--color-rain)' : 'var(--color-muted)' }}>{d.rain_prob}%</span>
+                  <div className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>
+                    {curr?.weather_desc} · Feels like {curr?.feels_like}°C
+                  </div>
+                  <div className="text-xs mt-1 font-semibold" style={{ color: 'var(--color-paddy)' }}>
+                    📍 {locationLabel}
+                  </div>
                 </div>
               </div>
+
+              {/* Grid Metrics */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="p-2.5 rounded-xl border bg-card/60" style={{ background: 'var(--color-card)', borderColor: 'var(--color-card-border)' }}>
+                  <div className="text-xs flex items-center gap-1" style={{ color: 'var(--color-muted)' }}>
+                    <Droplets size={14} style={{ color: '#2563EB' }} /> Humidity
+                  </div>
+                  <div className="text-lg font-bold mt-1" style={{ color: 'var(--color-ink)' }}>{curr?.humidity}%</div>
+                </div>
+                <div className="p-2.5 rounded-xl border bg-card/60" style={{ background: 'var(--color-card)', borderColor: 'var(--color-card-border)' }}>
+                  <div className="text-xs flex items-center gap-1" style={{ color: 'var(--color-muted)' }}>
+                    <Wind size={14} style={{ color: '#059669' }} /> Wind Speed
+                  </div>
+                  <div className="text-lg font-bold mt-1" style={{ color: 'var(--color-ink)' }}>{curr?.wind_speed} km/h</div>
+                </div>
+                <div className="p-2.5 rounded-xl border bg-card/60" style={{ background: 'var(--color-card)', borderColor: 'var(--color-card-border)' }}>
+                  <div className="text-xs flex items-center gap-1" style={{ color: 'var(--color-muted)' }}>
+                    <CloudRain size={14} style={{ color: '#3B82F6' }} /> 7D Rain Total
+                  </div>
+                  <div className="text-lg font-bold mt-1" style={{ color: 'var(--color-ink)' }}>{weatherData.analytics.total_rain_7d.toFixed(1)} mm</div>
+                </div>
+                <div className="p-2.5 rounded-xl border bg-card/60" style={{ background: 'var(--color-card)', borderColor: 'var(--color-card-border)' }}>
+                  <div className="text-xs flex items-center gap-1" style={{ color: 'var(--color-muted)' }}>
+                    <Sun size={14} style={{ color: '#D97706' }} /> Dry Spell
+                  </div>
+                  <div className="text-lg font-bold mt-1" style={{ color: 'var(--color-ink)' }}>{weatherData.analytics.dry_spell} days</div>
+                </div>
+              </div>
+
+              {/* ML Risk Summary */}
+              {mlPredictions && (
+                <div className="p-4 rounded-xl border space-y-2"
+                  style={{ background: 'var(--color-canvas)', borderColor: 'var(--color-card-border)' }}>
+                  <div className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--color-paddy)' }}>
+                    <ShieldAlert size={14} /> ML Field Risk Score
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span>Irrigation Need:</span>
+                    <span className="font-bold uppercase px-2 py-0.5 rounded text-[10px]"
+                      style={{
+                        background: mlPredictions.irrigation_need === 'high' ? 'var(--color-alert-soft)' : 'var(--color-paddy-soft)',
+                        color: mlPredictions.irrigation_need === 'high' ? 'var(--color-alert)' : 'var(--color-paddy)'
+                      }}>
+                      {mlPredictions.irrigation_need}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span>Fungal Disease Risk:</span>
+                    <span className="font-bold uppercase px-2 py-0.5 rounded text-[10px]"
+                      style={{
+                        background: mlPredictions.disease_risk === 'high' ? 'var(--color-alert-soft)' : 'var(--color-paddy-soft)',
+                        color: mlPredictions.disease_risk === 'high' ? 'var(--color-alert)' : 'var(--color-paddy)'
+                      }}>
+                      {mlPredictions.disease_risk}
+                    </span>
+                  </div>
+                  <div className="text-[11px] pt-1 border-t italic" style={{ color: 'var(--color-muted)', borderColor: 'var(--color-card-border)' }}>
+                    {mlPredictions.reasoning[0] || 'Conditions standard.'}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* AI Advisory Generator Card */}
+          <div className="card p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} style={{ color: 'var(--color-paddy)' }} />
+                <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                  {t('weather.farming_advisory')}
+                </h3>
+              </div>
+              <button
+                onClick={handleGenerateAdvisory}
+                disabled={advisoryLoading || isAIUnavailable}
+                className="btn btn-primary text-xs py-2 px-3">
+                {advisoryLoading ? <><Loader2 size={13} className="animate-spin" /> Generating...</> : <><Sparkles size={13} /> Generate Bulletin</>}
+              </button>
+            </div>
+            {advisory ? (
+              <div className="p-4 rounded-xl text-sm leading-relaxed whitespace-pre-line"
+                style={{ background: 'var(--color-paddy-soft)', color: 'var(--color-paddy)' }}>
+                {advisory}
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                {t('weather.advisory_desc')}
+              </p>
+            )}
+          </div>
+
+          {/* Sub-Navigation Tabs */}
+          <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--color-canvas)', border: '1px solid var(--color-card-border)' }}>
+            {[
+              { id: 'overview', label: '24h Forecast' },
+              { id: 'forecast', label: '7-Day Forecast' },
+              { id: 'history', label: '61-Day History' },
+              { id: 'soil', label: 'Soil Moisture & Temp' },
+            ].map(tItem => (
+              <button
+                key={tItem.id}
+                onClick={() => setTab(tItem.id)}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: tab === tItem.id ? 'var(--color-card)' : 'transparent',
+                  color: tab === tItem.id ? 'var(--color-paddy)' : 'var(--color-muted)',
+                  boxShadow: tab === tItem.id ? 'var(--shadow-card)' : 'none',
+                  border: 'none', cursor: 'pointer'
+                }}>
+                {tItem.label}
+              </button>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* Climate Anomalies & AI Bulletin */}
-      {tab === 'climate' && !loading && (
-        <div className="space-y-6">
-          {climate && (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {[
-                { label: t('weather.rain_anomaly'), value: `${climate.rain_anomaly_pct > 0 ? '+' : ''}${climate.rain_anomaly_pct}%`, color: 'var(--color-rain)' },
-                { label: 'SPI Drought Index', value: climate.spi_30day, color: 'var(--color-turmeric)' },
-                { label: t('weather.heatwave'), value: `${climate.heatwave_days} days`, color: 'var(--color-laterite)' },
-                { label: t('weather.dry_spell'), value: `${climate.max_dry_spell_days} days`, color: 'var(--color-alert)' },
-                { label: t('weather.monsoon'), value: climate.monsoon_onset_estimate, color: 'var(--color-paddy)' },
-              ].map((c, i) => (
-                <div key={i} className="card p-4 text-center">
-                  <div className="text-[11px] mb-1 font-medium" style={{ color: 'var(--color-muted)' }}>{c.label}</div>
-                  <div className="text-lg sm:text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: c.color }}>{c.value}</div>
+          {/* Tab 1: 24h Hourly Forecast */}
+          {tab === 'overview' && (
+            <div className="card p-5 space-y-4">
+              <h4 className="text-sm font-bold">24-Hour Temperature & Rain Probability</h4>
+              {hourlyChartData && (
+                <div style={{ height: 260 }}>
+                  <Line data={hourlyChartData} options={{ responsive: true, maintainAspectRatio: false, scales: { y1: { position: 'right' } } }} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 2: 7-Day Forecast Cards */}
+          {tab === 'forecast' && (
+            <div className="grid grid-cols-2 sm:grid-cols-7 gap-3">
+              {weatherData.forecast.map((d, i) => (
+                <div key={i} className="card p-3 text-center space-y-2">
+                  <div className="text-xs font-bold" style={{ color: 'var(--color-muted)' }}>
+                    {new Date(d.date).toLocaleDateString([], { weekday: 'short', month: 'numeric', day: 'numeric' })}
+                  </div>
+                  <div className="text-2xl">{d.weather_icon}</div>
+                  <div className="text-xs font-bold">{d.temp_max}° / {d.temp_min}°</div>
+                  <div className="text-[10px]" style={{ color: '#2563EB' }}>💧 {d.precip_probability}%</div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* AI Agronomy Advisory */}
-          <div className="card p-6" style={{ borderLeft: '5px solid var(--color-paddy)' }}>
-            <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-              <div>
-                <h3 className="text-base font-bold m-0 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
-                  <Sparkles size={18} style={{ color: 'var(--color-turmeric)' }} /> Krishi Saarthi Live Weather Advisory
-                </h3>
-                <p className="text-xs m-0 mt-0.5" style={{ color: 'var(--color-muted)' }}>
-                  Real-time micro-climate advisory generated by Ollama AI based on local rain & temperature trends.
-                </p>
+          {/* Tab 3: 61-Day Historical Chart */}
+          {tab === 'history' && (
+            <div className="card p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold">Historical Temperature & Rainfall (Last 30 Days)</h4>
+                <span className="text-xs" style={{ color: 'var(--color-muted)' }}>61 Days Logged</span>
               </div>
-              <button className="btn btn-paddy text-xs py-2 px-4 shadow-sm" onClick={fetchAdvisory} disabled={advisoryLoading || isAIUnavailable}>
-                {advisoryLoading ? <Loader2 size={14} className="animate-spin" /> : isAIUnavailable ? <AlertTriangle size={14} /> : <Sparkles size={14} />}
-                {advisoryLoading ? 'Generating Advisory...' : isAIUnavailable ? 'AI Offline' : 'Generate Live AI Advisory'}
-              </button>
+              {historicalChartData && (
+                <div style={{ height: 280 }}>
+                  <Line data={historicalChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                </div>
+              )}
             </div>
+          )}
 
-            {advisory ? (
-              <div className="p-4 rounded-xl text-sm leading-relaxed whitespace-pre-line bg-emerald-50/50 border border-emerald-100"
-                dangerouslySetInnerHTML={{ __html: advisory.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
-            ) : (
-              <div className="p-4 rounded-xl text-xs bg-gray-50 text-slate-600 border border-gray-100">
-                Click <strong>Generate Live AI Advisory</strong> to get hyper-localized irrigation and crop protection advice tailored to this week's weather pattern.
+          {/* Tab 4: Soil Moisture & Depth Temperatures */}
+          {tab === 'soil' && (
+            <div className="card p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Waves size={16} style={{ color: '#2563EB' }} />
+                <h4 className="text-sm font-bold">Soil Moisture & Surface Temperature (0-27cm)</h4>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+              {soilChartData && (
+                <div style={{ height: 260 }}>
+                  <Line data={soilChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      ) : null}
     </div>
   )
 }

@@ -5,11 +5,14 @@ import { useAppContext } from '../context/AppContext'
 import { useAIStatus } from '../context/AIStatusContext'
 import { AIStatusBanner } from '../components/AIStatusIndicator'
 import { chat as ollamaChat, analyzePlant as ollamaVision } from '../services/ollamaService'
+import { buildFieldContext, detectIntent, contextToPromptString } from '../services/fieldContext'
+import { fetchFieldWeather } from '../services/weatherService'
 
 export default function AdvisoryChat() {
   const { t, i18n } = useTranslation()
-  const { getAIContext } = useAppContext()
+  const { getAIContext, farms, crops } = useAppContext()
   const { isAIReady, isAIUnavailable, isAIInitializing, model: aiModel } = useAIStatus()
+  const [selectedFarm, setSelectedFarm] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,6 +20,10 @@ export default function AdvisoryChat() {
   const [tts, setTts] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
   const [imageBase64, setImageBase64] = useState(null)
+
+  useEffect(() => {
+    if (farms.length > 0 && !selectedFarm) setSelectedFarm(farms[0])
+  }, [farms])
   const endRef = useRef(null)
   const recRef = useRef(null)
   const fileRef = useRef(null)
@@ -57,7 +64,29 @@ export default function AdvisoryChat() {
     setLoading(true)
 
     try {
-      const aiContext = getAIContext()
+      let aiContext = getAIContext()
+
+      // Enrich with field knowledge graph if field selected
+      if (selectedFarm) {
+        const intent = detectIntent(text)
+        const farmCrops = crops.filter(c => c.farm_id === selectedFarm.id)
+        const weather = await fetchFieldWeather(selectedFarm.lat, selectedFarm.lng)
+
+        const graphCtx = buildFieldContext(selectedFarm, {
+          crops: farmCrops,
+          weather,
+          intent,
+        })
+
+        aiContext = {
+          ...aiContext,
+          field: graphCtx.field_name,
+          crops: graphCtx.crop_summary,
+          weather: graphCtx.weather?.current || '',
+          knowledge_graph: contextToPromptString(graphCtx),
+        }
+      }
+
       const history = messages.slice(-6).map(m => ({ role: m.role, content: m.content }))
 
       let data
@@ -104,12 +133,26 @@ export default function AdvisoryChat() {
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-2xl m-0" style={{ fontFamily: 'var(--font-display)' }}>{t('chat.title')} 🌾</h1>
-        <button onClick={() => setTts(!tts)} className="btn btn-outline text-xs py-2 px-3"
-          style={tts ? { background: 'var(--color-paddy-soft)', borderColor: 'var(--color-paddy)', color: 'var(--color-paddy)' } : {}}>
-          {tts ? <Volume2 size={14} /> : <VolumeX size={14} />} {t('chat.radio_mode')}
-        </button>
+        <div className="flex items-center gap-2">
+          {farms.length > 0 && (
+            <select
+              value={selectedFarm?.id || ''}
+              onChange={e => setSelectedFarm(farms.find(f => f.id === parseInt(e.target.value)) || null)}
+              className="input text-xs py-1.5 px-3"
+              style={{ appearance: 'auto', background: 'var(--color-card)' }}>
+              <option value="">General Advice (No Field)</option>
+              {farms.map(f => (
+                <option key={f.id} value={f.id}>📍 {f.name} ({f.area_ha} ha)</option>
+              ))}
+            </select>
+          )}
+          <button onClick={() => setTts(!tts)} className="btn btn-outline text-xs py-2 px-3"
+            style={tts ? { background: 'var(--color-paddy-soft)', borderColor: 'var(--color-paddy)', color: 'var(--color-paddy)' } : {}}>
+            {tts ? <Volume2 size={14} /> : <VolumeX size={14} />} {t('chat.radio_mode')}
+          </button>
+        </div>
       </div>
 
       {/* AI Status Banner */}
