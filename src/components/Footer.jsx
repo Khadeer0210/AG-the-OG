@@ -6,21 +6,14 @@ export default function Footer() {
   const { t } = useTranslation()
 
   return (
-    <footer className="mt-20 relative overflow-hidden text-white" style={{ background: 'var(--forest)' }}>
+    <footer className="mt-20 relative overflow-hidden text-white border-t border-white/10" style={{ background: '#000000' }}>
       {/* Topographic line art overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-5"
         style={{
-          backgroundImage: `radial-gradient(circle at 20% 20%, var(--sprout) 0%, transparent 40%),
-                            radial-gradient(circle at 80% 80%, var(--gold) 0%, transparent 40%)`
+          backgroundImage: `radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0%, transparent 40%),
+                            radial-gradient(circle at 80% 80%, rgba(232,163,61,0.1) 0%, transparent 40%)`
         }}
       />
-
-      {/* Organic Wave Divider Top */}
-      <div className="w-full overflow-hidden leading-none pointer-events-none -mt-1">
-        <svg className="relative block w-full h-8 sm:h-12" viewBox="0 0 1200 120" preserveAspectRatio="none">
-          <path d="M0,0 C150,90 350,-40 500,40 C650,120 900,10 1200,60 L1200,0 L0,0 Z" fill="var(--cream)" opacity="1"></path>
-        </svg>
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">

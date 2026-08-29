@@ -1,93 +1,91 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..800;1,9..144,500..800&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..800;1,9..144,500..800&family=Instrument+Serif:ital@1&family=Inter:wght@100..900&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* ══════════════════════════════════════════════════════════
-   AGRI VISION — "MODERN ORGANIC AGRICULTURE" DESIGN SYSTEM
+   VESPER.AI LIQUID-METAL DARK UI — GLOBAL MANDATE
    ══════════════════════════════════════════════════════════ */
 
-:root {
-  /* ── Core Color Tokens ── */
-  --forest: #14432A;   /* dark surfaces, footer, CTA bands */
-  --leaf: #2E7D4F;     /* primary buttons, links, active states */
-  --sprout: #7BC96F;   /* accents, highlights, icon strokes */
-  --cream: #FAF7F0;    /* page background */
-  --sand: #F0EAD8;     /* alternate section background */
-  --soil: #8B5E3C;     /* earthy secondary accent */
-  --gold: #E8A33D;     /* CTAs, badges, underlines, stat suffixes */
-  --ink: #22301F;      /* body text */
+html, body { background: #000000 !important; color: #ffffff; }
 
-  /* ── Application Theme Tokens ── */
-  --color-canvas: var(--cream);
-  --color-card: #FFFFFF;
-  --color-card-border: rgba(20, 67, 42, 0.08);
-  --color-ink: var(--ink);
-  --color-muted: #5C6858;
+:root {
+  /* Vesper.ai Pure Dark Design Tokens */
+  --bg: #000000;
+  --text: #ffffff;
+  --muted: #9a9a9a;
+  --stat: #d8d8d8;
+  --border: rgba(255, 255, 255, 0.16);
+  --border-soft: rgba(255, 255, 255, 0.12);
+
+  /* Typography Scale */
+  --logo: 15.5px; --logo-mark: 22px;
+  --nav: 14px; --nav-h: 40px;
+  --btn: 13.5px; --btn-h: 40px; --hero-btn-h: 42px;
+  --h1: 48px;
+  --lede: 15.5px; --lede-max: 470px;
+  --badge: 12.5px;
+  --stat-size: 13.5px;
+
+  /* Spacing & Layout */
+  --header-y: 22px; --header-x: 40px;
+  --stats-x: 72px; --stats-y: 36px;
+  --hero-gap: 85px;
+  --copy-max: 860px;
+
+  /* Organic Accent Overlays */
+  --forest: #14432A;
+  --leaf: #2E7D4F;
+  --sprout: #7BC96F;
+  --cream: #000000;
+  --sand: #0a0a0a;
+  --soil: #8B5E3C;
+  --gold: #E8A33D;
+  --ink: #ffffff;
+
+  /* Application Theme Tokens (Dark Mode) */
+  --color-canvas: #000000;
+  --color-card: #0c0c0c;
+  --color-card-border: rgba(255, 255, 255, 0.16);
+  --color-ink: #ffffff;
+  --color-muted: #9a9a9a;
 
   --color-paddy: var(--leaf);
   --color-paddy-dark: var(--forest);
-  --color-paddy-soft: #EAF3E6;
+  --color-paddy-soft: rgba(46, 125, 79, 0.2);
   --color-rain: #2A6B97;
   --color-rain-dark: #1A4B6E;
-  --color-rain-soft: #E6F0F7;
+  --color-rain-soft: rgba(42, 107, 151, 0.2);
   --color-turmeric: var(--gold);
   --color-turmeric-dark: #C58225;
-  --color-turmeric-soft: #FDF4E3;
+  --color-turmeric-soft: rgba(232, 163, 61, 0.2);
   --color-laterite: var(--soil);
-  --color-laterite-soft: #F5ECE5;
-  --color-alert: #C0392B;
-  --color-alert-soft: #FADBD8;
+  --color-laterite-soft: rgba(139, 94, 60, 0.2);
+  --color-alert: #E74C3C;
+  --color-alert-soft: rgba(231, 76, 60, 0.2);
 
-  /* ── Typography Tokens ── */
   --font-display: 'Fraunces', serif;
-  --font-body: 'Manrope', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* ── Elevation & Radius ── */
   --radius-card: 20px;
   --radius-pill: 9999px;
-  --shadow-card: 0 8px 30px rgba(20, 67, 42, 0.08);
-  --shadow-card-hover: 0 20px 40px rgba(20, 67, 42, 0.14);
-
-  /* ── Easing Motion Tokens ── */
-  --ease-organic: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.8);
 }
 
 @theme {
   --color-forest: var(--forest);
   --color-leaf: var(--leaf);
   --color-sprout: var(--sprout);
-  --color-cream: var(--cream);
-  --color-sand: var(--sand);
+  --color-cream: #000000;
+  --color-sand: #0a0a0a;
   --color-soil: var(--soil);
   --color-gold: var(--gold);
-  --color-ink: var(--ink);
+  --color-ink: #ffffff;
 
-  --color-canvas: var(--cream);
-  --color-card: #FFFFFF;
-  --color-card-border: rgba(20, 67, 42, 0.08);
-  --color-ink: var(--ink);
-  --color-muted: #5C6858;
-
-  --color-paddy: var(--leaf);
-  --color-paddy-dark: var(--forest);
-  --color-paddy-soft: #EAF3E6;
-  --color-rain: #2A6B97;
-  --color-rain-dark: #1A4B6E;
-  --color-rain-soft: #E6F0F7;
-  --color-turmeric: var(--gold);
-  --color-turmeric-dark: #C58225;
-  --color-turmeric-soft: #FDF4E3;
-  --color-laterite: var(--soil);
-  --color-laterite-soft: #F5ECE5;
-  --color-alert: #C0392B;
-  --color-alert-soft: #FADBD8;
-
-  --font-display: 'Fraunces', serif;
-  --font-body: 'Manrope', sans-serif;
-
-  --radius-card: 20px;
-  --shadow-card: 0 8px 30px rgba(20, 67, 42, 0.08);
-  --shadow-card-hover: 0 20px 40px rgba(20, 67, 42, 0.14);
+  --color-canvas: #000000;
+  --color-card: #0c0c0c;
+  --color-card-border: rgba(255, 255, 255, 0.16);
+  --color-ink: #ffffff;
+  --color-muted: #9a9a9a;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -205,7 +203,7 @@ h3 {
 }
 
 /* ══════════════════════════════════════════════════════════
-   CARDS & CONTAINERS
+   CARDS & CONTAINERS (Vesper.ai Dark Liquid-Metal)
    ══════════════════════════════════════════════════════════ */
 
 .card {
@@ -217,42 +215,45 @@ h3 {
   animation: fade-up 0.5s var(--ease-organic) backwards;
   position: relative;
   overflow: hidden;
+  color: #ffffff;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-card-hover);
-  transform: translateY(-6px);
-  border-color: rgba(46, 125, 79, 0.18);
-}
-
-/* Inner image zoom on card hover */
-.card:hover img {
-  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.08), var(--shadow-card-hover);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.32);
 }
 
 .card img {
   transition: transform 0.5s var(--ease-organic);
 }
 
+.card:hover img {
+  transform: scale(1.05);
+}
+
 /* Glassmorphism panel */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(20, 67, 42, 0.08);
-  box-shadow: var(--shadow-card);
+  background: rgba(12, 12, 12, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
 }
 
 /* Dark Forest Band */
 .bg-forest-band {
-  background-color: var(--forest);
-  color: var(--cream);
+  background-color: #060606;
+  color: #ffffff;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   position: relative;
   overflow: hidden;
 }
 
 /* ══════════════════════════════════════════════════════════
-   BUTTONS (999px Pill Radius + Micro-interactions)
+   BUTTONS (Vesper Liquid Metal & Glass Integration)
    ══════════════════════════════════════════════════════════ */
 
 .btn {
@@ -261,10 +262,10 @@ h3 {
   justify-content: center;
   gap: 8px;
   padding: 12px 24px;
-  border-radius: 999px; /* Pill radius per prompt */
+  border-radius: 999px;
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   border: none;
   transition: all 0.3s var(--ease-organic);
@@ -277,48 +278,51 @@ h3 {
   transform: scale(0.98) !important;
 }
 
-/* Primary Leaf Button */
+/* Primary Liquid Glass Button */
 .btn-primary, .btn-paddy {
-  background: var(--leaf);
-  color: var(--cream);
-  box-shadow: 0 4px 16px rgba(46, 125, 79, 0.25);
+  background: linear-gradient(180deg, #ffffff 0%, #e7e7e7 48%, #cfcfcf 100%);
+  color: #111111 !important;
+  border: 1px solid #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 16px rgba(255, 255, 255, 0.15);
 }
 
 .btn-primary:hover, .btn-paddy:hover {
-  background: #256640;
-  color: #FFFFFF;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f6ff 42%, #d5def2 100%);
+  color: #111111 !important;
+  border-color: #f2f6ff;
+  box-shadow: inset 0 1px 0 #ffffff, 0 0 26px rgba(186, 208, 255, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(46, 125, 79, 0.38);
 }
 
 /* Gold CTA Button */
 .btn-gold {
-  background: var(--gold);
-  color: var(--ink);
+  background: linear-gradient(180deg, #f7c36d 0%, #e8a33d 100%);
+  color: #111111 !important;
   box-shadow: 0 4px 16px rgba(232, 163, 61, 0.3);
 }
 
 .btn-gold:hover {
-  background: #D8932C;
+  background: linear-gradient(180deg, #ffda96 0%, #f0af4b 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(232, 163, 61, 0.45);
+  box-shadow: 0 0 24px rgba(232, 163, 61, 0.5);
 }
 
-/* Secondary Leaf Outline Button */
+/* Secondary Frosted Glass Button */
 .btn-outline {
-  background: transparent;
-  border: 1.5px solid var(--leaf);
-  color: var(--leaf);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.5) 46%, rgba(150, 170, 200, 0.1));
+  border: 1px solid rgba(198, 198, 198, 0.55);
+  color: #ffffff !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .btn-outline:hover {
-  background: var(--color-paddy-soft);
-  color: var(--forest);
-  border-color: var(--leaf);
+  background: linear-gradient(135deg, rgba(210, 225, 255, 0.2), rgba(0, 0, 0, 0.4) 48%, rgba(180, 195, 220, 0.18));
+  border-color: rgba(220, 230, 255, 0.8);
+  box-shadow: 0 0 24px rgba(170, 200, 255, 0.28);
   transform: translateY(-2px);
 }
 
-/* Arrow slide micro-interaction */
 .btn svg {
   transition: transform 0.25s var(--ease-organic);
 }
@@ -328,32 +332,32 @@ h3 {
 }
 
 /* ══════════════════════════════════════════════════════════
-   FORMS & INPUTS
+   FORMS & INPUTS (Pure Dark Vesper Theme)
    ══════════════════════════════════════════════════════════ */
 
-.input {
+.input, select, textarea {
   width: 100%;
   padding: 12px 18px;
-  border: 1px solid #DCE5D9;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 12px;
   font-size: 14px;
   font-family: var(--font-body);
-  background: #FFFFFF;
-  color: var(--ink);
+  background: #080808;
+  color: #ffffff;
   transition: all 0.2s ease;
   outline: none;
 }
 
-.input:focus {
-  border-color: var(--sprout);
-  box-shadow: 0 0 0 3px rgba(123, 201, 111, 0.3);
+.input:focus, select:focus, textarea:focus {
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+  background: #0d0d0d;
 }
 
-/* Label styling */
 label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--ink);
+  color: #d8d8d8;
   margin-bottom: 6px;
   display: block;
 }

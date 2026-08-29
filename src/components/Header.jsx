@@ -73,10 +73,10 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b transition-all duration-300 backdrop-blur-lg" style={{
-        background: scrolled ? 'rgba(250, 247, 240, 0.94)' : 'rgba(250, 247, 240, 0.82)',
-        borderColor: scrolled ? 'rgba(46, 125, 79, 0.25)' : 'var(--color-card-border)',
-        boxShadow: scrolled ? '0 10px 30px rgba(20, 67, 42, 0.08)' : '0 4px 20px rgba(20, 67, 42, 0.03)',
+      <header className="sticky top-0 z-50 border-b transition-all duration-300 backdrop-blur-xl" style={{
+        background: scrolled ? 'rgba(6, 6, 6, 0.95)' : 'rgba(6, 6, 6, 0.85)',
+        borderColor: scrolled ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.14)',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8)',
       }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
@@ -88,9 +88,9 @@ export default function Header() {
                 onClick={() => setDrawerOpen(!drawerOpen)}
                 className="p-2 rounded-xl transition-all duration-200 hover:scale-105"
                 style={{
-                  background: drawerOpen ? 'var(--color-paddy-soft)' : 'transparent',
-                  color: drawerOpen ? 'var(--leaf)' : 'var(--color-muted)',
-                  border: '1px solid ' + (drawerOpen ? 'rgba(46, 125, 79, 0.25)' : 'transparent'),
+                  background: drawerOpen ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                  color: drawerOpen ? '#ffffff' : '#9a9a9a',
+                  border: '1px solid ' + (drawerOpen ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.1)'),
                   cursor: 'pointer',
                 }}
                 aria-label="Toggle navigation drawer"
@@ -101,45 +101,44 @@ export default function Header() {
               {/* Logo */}
               <Link to="/" className="flex items-center gap-2.5 no-underline group">
                 <div className="w-10 h-10 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-md" style={{
-                  background: 'linear-gradient(135deg, var(--leaf), var(--forest))',
-                  boxShadow: '0 4px 14px rgba(46, 125, 79, 0.35)',
+                  background: 'linear-gradient(135deg, #2a2a2a, #050505)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.5)',
                 }}>
                   <Sprout size={22} color="#fff" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-base font-extrabold leading-tight tracking-tight flex items-center gap-1" style={{
-                    fontFamily: 'var(--font-display)', color: 'var(--ink)',
+                  <span className="text-base font-extrabold leading-tight tracking-tight flex items-center gap-1 text-white" style={{
+                    fontFamily: 'var(--font-display)',
                   }}>
                     {t('app_name')}
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]"></span>
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--leaf)' }}>
-                    Krishi Saarthi · Field AI
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Krishi Saarthi · Operational AI
                   </span>
                 </div>
               </Link>
             </div>
 
             {/* Center: Primary Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-1.5 p-1.5 rounded-full" style={{
-              background: 'rgba(240, 234, 216, 0.6)',
-              border: '1px solid rgba(20, 67, 42, 0.08)',
+            <nav className="hidden lg:flex items-center gap-1.5 p-1.5 rounded-xl" style={{
+              background: 'rgba(15, 15, 15, 0.85)',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
             }}>
               {PRIMARY_NAV.map(({ path, icon: Icon, key }) => {
                 const active = location.pathname === path
                 return (
                   <Link key={path} to={path}
-                    className="relative flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold no-underline transition-all duration-200 group"
+                    className="relative flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium no-underline transition-all duration-200 group"
                     style={{
-                      color: active ? 'var(--leaf)' : 'var(--ink)',
-                      background: active ? '#FFFFFF' : 'transparent',
-                      boxShadow: active ? '0 4px 12px rgba(20,67,42,0.08)' : 'none',
+                      color: active ? '#111111' : '#9a9a9a',
+                      background: active ? 'linear-gradient(180deg, #ffffff 0%, #e0e0e0 100%)' : 'transparent',
+                      fontWeight: active ? 700 : 500,
+                      boxShadow: active ? '0 4px 14px rgba(255,255,255,0.2)' : 'none',
                     }}>
-                    <Icon size={16} style={{ color: active ? 'var(--leaf)' : 'var(--color-muted)' }} />
+                    <Icon size={16} style={{ color: active ? '#111111' : '#9a9a9a' }} />
                     <span>{t(key)}</span>
-                    {!active && (
-                      <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-[var(--gold)] rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
-                    )}
                   </Link>
                 )
               })}
