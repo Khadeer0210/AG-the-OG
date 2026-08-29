@@ -5,10 +5,10 @@
 
 const OLLAMA_BASE = '/ollama'
 const MODELS_PREFERENCE = ['gemma3:4b', 'gemma4:latest']
-const VISION_MODELS = ['llava:7b', 'llava:latest', 'llava:13b']
+const VISION_MODELS = ['llava:7b', 'llava:latest', 'llava:13b', 'llava']
 const TIMEOUT_CHAT = 25000      // 25s for chat
 const TIMEOUT_ANALYSIS = 40000  // 40s for analysis
-const TIMEOUT_VISION = 50000    // 50s for vision
+const TIMEOUT_VISION = 90000    // 90s for vision (LLaVA is slow on large images)
 const MAX_RETRIES = 1
 const TEMPERATURE = 0.5
 const TOP_P = 0.9
@@ -63,16 +63,22 @@ export async function checkHealth(forceRefresh = false) {
       }
     }
     if (!_activeModel && _modelsAvailable.length > 0) {
-      _activeModel = _modelsAvailable[0]
+      // Pick first non-vision model, or just the first model
+      _activeModel = _modelsAvailable.find(m => !m.startsWith('llava')) || _modelsAvailable[0]
     }
 
-    // Find best vision model
+    // Find best vision model — match any model starting with 'llava'
     _visionModel = null
     for (const vm of VISION_MODELS) {
       if (_modelsAvailable.some(m => m === vm || m === vm + ':latest')) {
         _visionModel = vm
         break
       }
+    }
+    // Fallback: find any model with 'llava' in name
+    if (!_visionModel) {
+      const llavaMatch = _modelsAvailable.find(m => m.toLowerCase().includes('llava'))
+      if (llavaMatch) _visionModel = llavaMatch
     }
 
     _lastHealthCheck = now
@@ -127,22 +133,25 @@ export async function warmUp() {
 // ═══════════════════════════════════════════════════════
 
 async function rawChat(messages, model, options = {}, timeout = TIMEOUT_CHAT) {
+  // Extract image data separately — it goes on the message, NOT in Ollama options
+  const imageData = options.images || null
+  const { images, ...ollamaOptions } = options
+
   const body = {
     model: model || _activeModel,
-    messages,
+    messages: [...messages],
     stream: false,
     options: {
-      num_predict: options.num_predict || 150,
-      temperature: options.temperature ?? TEMPERATURE,
-      top_p: options.top_p ?? TOP_P,
-      ...options,
+      num_predict: ollamaOptions.num_predict || 150,
+      temperature: ollamaOptions.temperature ?? TEMPERATURE,
+      top_p: ollamaOptions.top_p ?? TOP_P,
     },
   }
 
-  // Handle images for multimodal
-  if (options.images && options.images.length > 0) {
+  // Handle images for multimodal — attach to the LAST user message
+  if (imageData && imageData.length > 0) {
     const lastIdx = body.messages.length - 1
-    body.messages[lastIdx] = { ...body.messages[lastIdx], images: options.images }
+    body.messages[lastIdx] = { ...body.messages[lastIdx], images: imageData }
   }
 
   const controller = new AbortController()
@@ -248,56 +257,124 @@ export async function chat(message, history = [], language = 'en', context = {})
 }
 
 /**
- * Analyze a plant image (vision)
+ * Analyze a plant image using LLaVA vision model
+ * Falls back to text model description if vision unavailable
  */
 export async function analyzePlant(imageBase64, message = '', language = 'en', context = {}) {
   const langName = LANG_NAMES[language] || 'English'
 
-  // Use dedicated vision model (llava) for image analysis
-  const modelToUse = _visionModel || _activeModel
-  if (!modelToUse) {
+  // Ensure Ollama is reachable and models are discovered
+  if (!_ollamaReachable || (!_visionModel && !_activeModel)) {
     const health = await checkHealth(true)
-    if (!health.model_available) return { error: 'No AI model available', offline: true }
+    if (!health.ollama_reachable) return { error: 'Ollama is not running. Start Ollama to use Plant Health Analyzer.', offline: true }
   }
 
-  const visionPrompt = `You are Krishi Saarthi, an expert Indian farm advisor. Analyze this plant image. Reply ONLY as valid JSON: {"crop":"name","disease":"name or None","confidence":85,"severity":"Low|Moderate|High|Severe","organic_treatment":"brief organic remedy","chemical_treatment":"brief chemical remedy","summary":"summary in ${langName}"}`
+  // Pick the model — prefer llava for image analysis
+  const modelToUse = _visionModel || _activeModel
+  if (!modelToUse) {
+    return { error: 'No AI model found in Ollama. Pull llava:7b for image analysis.', offline: true }
+  }
 
-  const contextStr = []
-  if (context.weather) contextStr.push(`Weather: ${context.weather}`)
-  if (context.location) contextStr.push(`Location: ${context.location}`)
-  if (context.crop) contextStr.push(`Crop: ${context.crop}`)
-  if (context.field) contextStr.push(`Field: ${context.field}`)
+  console.log(`[PlantHealth] Using vision model: ${modelToUse}, Available: [${_modelsAvailable.join(', ')}]`)
 
-  const userMsg = message || 'Identify the plant disease in this image and suggest treatments.'
+  // Build context-enriched prompt
+  const contextParts = []
+  if (context.location) contextParts.push(`Location: ${context.location}`)
+  if (context.weather) contextParts.push(`Current Weather: ${context.weather}`)
+  if (context.crops) contextParts.push(`Farmer's Crops: ${context.crops}`)
+
+  const systemPrompt = [
+    `You are Krishi Saarthi, an expert Indian agricultural advisor and plant pathologist.`,
+    `Analyze the uploaded plant/leaf image carefully.`,
+    `Reply ONLY with valid JSON (no markdown, no explanation, no code blocks):`,
+    `{`,
+    `  "crop": "identified crop name",`,
+    `  "disease": "disease name or None if healthy",`,
+    `  "confidence": 85,`,
+    `  "severity": "Low|Moderate|High|Severe",`,
+    `  "summary": "2-3 sentence diagnosis in ${langName}",`,
+    `  "organic_treatment": "organic remedy with dosage",`,
+    `  "chemical_treatment": "chemical remedy with dosage and brand"`,
+    `}`,
+    contextParts.length > 0 ? `\nFarmer Context:\n${contextParts.join('\n')}` : '',
+  ].join('\n')
+
+  const userMsg = message || 'Look at this plant image. Identify the crop, diagnose any disease, rate the severity, and suggest both organic and chemical treatments.'
 
   const messages = [
-    { role: 'system', content: visionPrompt + (contextStr.length ? '\n' + contextStr.join('\n') : '') },
+    { role: 'system', content: systemPrompt },
     { role: 'user', content: userMsg },
   ]
 
+  // Send to Ollama with the image attached
   const reply = await rawChat(
     messages,
-    _visionModel || modelToUse,
-    { num_predict: 400, images: [imageBase64], temperature: 0.3 },
+    modelToUse,
+    { num_predict: 500, images: [imageBase64], temperature: 0.3 },
     TIMEOUT_VISION
   )
 
   if (reply === null) {
-    return { error: 'AI Vision is not available right now.', offline: true }
+    return { error: `Vision model ${modelToUse} did not respond. It may still be loading.`, offline: true }
   }
 
-  // Try to parse structured JSON
-  try {
-    const jsonMatch = reply.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/s)
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0])
-      if (parsed && typeof parsed === 'object') {
-        return { ...parsed, ai_generated: true }
-      }
-    }
-  } catch { /* fallback to raw */ }
+  console.log('[PlantHealth] Raw LLaVA response:', reply.substring(0, 300))
 
-  return { reply, ai_generated: true }
+  // Robust JSON extraction — LLaVA often wraps in ```json ... ```
+  const parsed = extractJSON(reply)
+  if (parsed && parsed.crop) {
+    return {
+      crop: parsed.crop || 'Unknown',
+      disease: parsed.disease || 'Unknown',
+      confidence: parsed.confidence || 75,
+      severity: parsed.severity || 'Moderate',
+      summary: parsed.summary || '',
+      organic_treatment: parsed.organic_treatment || parsed.organic || '',
+      chemical_treatment: parsed.chemical_treatment || parsed.chemical || '',
+      ai_generated: true,
+      model: modelToUse,
+    }
+  }
+
+  // If JSON parse failed, return the raw text as a reply for display
+  return {
+    reply: reply,
+    crop: tryExtractField(reply, 'crop'),
+    disease: tryExtractField(reply, 'disease'),
+    summary: reply.substring(0, 500),
+    ai_generated: true,
+    model: modelToUse,
+  }
+}
+
+/** Extract JSON from LLaVA responses that may be wrapped in markdown */
+function extractJSON(text) {
+  if (!text) return null
+  try {
+    // Try 1: Direct parse
+    return JSON.parse(text.trim())
+  } catch { /* continue */ }
+  try {
+    // Try 2: Extract from ```json ... ``` blocks
+    const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+    if (codeBlock) return JSON.parse(codeBlock[1].trim())
+  } catch { /* continue */ }
+  try {
+    // Try 3: Find first { ... } block
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (jsonMatch) return JSON.parse(jsonMatch[0])
+  } catch { /* continue */ }
+  return null
+}
+
+/** Try to extract a field value from unstructured text */
+function tryExtractField(text, field) {
+  const patterns = {
+    crop: /(?:crop|plant)[:\s]+["']?([A-Za-z\s/]+)["']?/i,
+    disease: /(?:disease|diagnosis|condition)[:\s]+["']?([A-Za-z\s/()]+)["']?/i,
+  }
+  const match = text.match(patterns[field])
+  return match ? match[1].trim().substring(0, 60) : null
 }
 
 /**
