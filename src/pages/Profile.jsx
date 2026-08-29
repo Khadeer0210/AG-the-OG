@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LANGUAGES } from '../i18n'
-import { User, MapPin, Sprout, Settings, Shield, Globe, Lock, LogOut, Save, Mail, Phone, CheckCircle2, Award, Sparkles, Navigation } from 'lucide-react'
+import { User, MapPin, Sprout, Settings, Shield, Globe, Lock, LogOut, Save, Mail, Phone, CheckCircle2, Award, Sparkles, Navigation, Loader2 } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
+import { useField } from '../context/FieldProvider'
 import AnimatedCounter from '../components/AnimatedCounter'
 
 const AVATAR_COLORS = [
@@ -15,41 +16,121 @@ const AVATAR_COLORS = [
 export default function Profile() {
   const { t, i18n } = useTranslation()
   const { location, setLocation } = useAppContext()
+  const { farms, allCrops, soilReports, insurancePolicies } = useField()
   const [tab, setTab] = useState('profile')
   const [avatarBg, setAvatarBg] = useState(AVATAR_COLORS[0])
   const [savedToast, setSavedToast] = useState(false)
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   const [user, setUser] = useState({
-    name: 'Karthik Raman',
-    email: 'karthik.agri@saarthi.in',
-    phone: '+91 98765 43210',
-    village: location?.village || 'Sriperumbudur',
-    district: location?.district || 'Kanchipuram',
-    state: location?.state || 'Tamil Nadu',
-    lat: location?.lat || 12.9634,
-    lng: location?.lng || 79.9431,
+    name: '',
+    email: '',
+    phone: '',
+    village: '',
+    district: '',
+    state: '',
+    lat: '',
+    lng: '',
     soilType: 'Red Loam',
-    experienceYears: 8,
+    experienceYears: 0,
   })
 
+  // Fetch profile from database on mount
+  useEffect(() => {
+    async function loadProfile() {
+      setLoadingProfile(true)
+      try {
+        const res = await fetch('/api/profile.php')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.user) {
+            setUser(prev => ({
+              ...prev,
+              name: data.user.name || prev.name,
+              email: data.user.email || prev.email,
+              phone: data.user.phone || prev.phone,
+              village: data.user.village || prev.village,
+              lat: data.user.lat || prev.lat,
+              lng: data.user.lng || prev.lng,
+            }))
+          }
+        }
+      } catch {
+        // Backend unavailable — use location context fallback
+        setUser(prev => ({
+          ...prev,
+          name: prev.name || 'Farmer',
+          village: location?.village || prev.village || 'Sriperumbudur',
+          lat: location?.lat || prev.lat || 12.9634,
+          lng: location?.lng || prev.lng || 79.9431,
+        }))
+      } finally {
+        setLoadingProfile(false)
+      }
+    }
+    loadProfile()
+  }, [])
+
+  // Compute real stats from field context
   const stats = [
-    { label: 'Registered Plots', value: 2, color: 'var(--color-paddy)' },
-    { label: 'Active Crops', value: 4, color: 'var(--color-turmeric)' },
-    { label: 'Soil Health Scans', value: 7, color: 'var(--color-rain)' },
-    { label: 'Insurance Shield', value: 1, color: 'var(--color-laterite)' },
+    { label: 'Registered Plots', value: farms.length, color: 'var(--color-paddy)' },
+    { label: 'Active Crops', value: allCrops.length, color: 'var(--color-turmeric)' },
+    { label: 'Soil Health Scans', value: soilReports.length || (farms.length > 0 ? 1 : 0), color: 'var(--color-rain)' },
+    { label: 'Insurance Policies', value: insurancePolicies.length, color: 'var(--color-laterite)' },
   ]
 
-  const handleSave = (e) => {
+  const completionPct = [
+    user.name ? 15 : 0,
+    user.email ? 15 : 0,
+    user.phone ? 10 : 0,
+    user.village ? 10 : 0,
+    user.lat ? 10 : 0,
+    user.lng ? 10 : 0,
+    farms.length > 0 ? 15 : 0,
+    allCrops.length > 0 ? 15 : 0,
+  ].reduce((a, b) => a + b, 0)
+
+  const handleSave = async (e) => {
     e.preventDefault()
-    setLocation(prev => ({
-      ...prev,
-      lat: parseFloat(user.lat),
-      lng: parseFloat(user.lng),
-      village: user.village,
-      display: `${user.village}, ${user.district}, ${user.state}`
-    }))
+    setSaving(true)
+    try {
+      // Save to backend
+      const res = await fetch('/api/profile.php', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: user.name,
+          phone: user.phone,
+          village: user.village,
+          lat: parseFloat(user.lat),
+          lng: parseFloat(user.lng),
+          language: i18n.language,
+        }),
+      })
+      if (res.ok) {
+        // Also update app context location
+        setLocation(prev => ({
+          ...prev,
+          lat: parseFloat(user.lat),
+          lng: parseFloat(user.lng),
+          village: user.village,
+          display: `${user.village}${user.district ? ', ' + user.district : ''}${user.state ? ', ' + user.state : ''}`
+        }))
+      }
+    } catch {
+      // Backend unavailable — still update local context
+      setLocation(prev => ({
+        ...prev,
+        lat: parseFloat(user.lat),
+        lng: parseFloat(user.lng),
+        village: user.village,
+        display: `${user.village}${user.district ? ', ' + user.district : ''}${user.state ? ', ' + user.state : ''}`
+      }))
+    }
     setSavedToast(true)
     setTimeout(() => setSavedToast(false), 3000)
+    setSaving(false)
   }
 
   const tabs = [
@@ -57,6 +138,11 @@ export default function Profile() {
     { id: 'settings', icon: Settings, label: t('profile.settings') },
     { id: 'security', icon: Shield, label: t('profile.security') },
   ]
+
+  const displayName = user.name || 'Farmer'
+  const displayVillage = user.village || location?.village || 'Unknown'
+  const displayDistrict = user.district || location?.district || ''
+  const displayState = user.state || location?.state || ''
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -75,7 +161,7 @@ export default function Profile() {
           <div className="relative">
             <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-4xl font-extrabold text-white shadow-lg transition-transform hover:scale-105"
               style={{ background: avatarBg, fontFamily: 'var(--font-display)' }}>
-              {user.name[0]}
+              {displayName[0] || 'F'}
             </div>
             <div className="flex gap-1 justify-center mt-2">
               {AVATAR_COLORS.map((bg, idx) => (
@@ -89,26 +175,28 @@ export default function Profile() {
           {/* User Details */}
           <div className="text-center sm:text-left flex-1">
             <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap mb-1">
-              <h2 className="text-2xl font-bold m-0" style={{ fontFamily: 'var(--font-display)' }}>{user.name}</h2>
+              <h2 className="text-2xl font-bold m-0" style={{ fontFamily: 'var(--font-display)' }}>
+                {loadingProfile ? <Loader2 size={20} className="animate-spin inline" /> : displayName}
+              </h2>
               <span className="chip chip-healthy text-xs"><Award size={12} /> Verified Saarthi Farmer</span>
             </div>
             <p className="text-xs sm:text-sm flex items-center gap-1 justify-center sm:justify-start m-0" style={{ color: 'var(--color-muted)' }}>
-              <MapPin size={14} style={{ color: 'var(--color-paddy)' }} /> {user.village}, {user.district}, {user.state}
+              <MapPin size={14} style={{ color: 'var(--color-paddy)' }} /> {displayVillage}{displayDistrict ? `, ${displayDistrict}` : ''}{displayState ? `, ${displayState}` : ''}
             </p>
 
             {/* Profile Completion Bar */}
             <div className="mt-4 max-w-xs mx-auto sm:mx-0">
               <div className="flex justify-between text-[11px] font-semibold mb-1">
                 <span style={{ color: 'var(--color-muted)' }}>Farm Profile Completion</span>
-                <span style={{ color: 'var(--color-paddy)' }}>92%</span>
+                <span style={{ color: 'var(--color-paddy)' }}>{completionPct}%</span>
               </div>
               <div className="vine-bar">
-                <div className="vine-bar-fill" style={{ width: '92%' }} />
+                <div className="vine-bar-fill" style={{ width: `${completionPct}%` }} />
               </div>
             </div>
           </div>
 
-          {/* Stats Badges */}
+          {/* Stats Badges — Real Data */}
           <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
             {stats.map((s, i) => (
               <div key={i} className="card p-3 text-center bg-white/70 backdrop-blur-sm">
@@ -197,8 +285,8 @@ export default function Profile() {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-paddy w-full py-3 text-sm shadow-md">
-            <Save size={16} /> Save Profile & Sync Geolocation
+          <button type="submit" className="btn btn-paddy w-full py-3 text-sm shadow-md" disabled={saving}>
+            {saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : <><Save size={16} /> Save Profile & Sync Geolocation</>}
           </button>
         </form>
       )}

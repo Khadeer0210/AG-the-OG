@@ -7,12 +7,13 @@ import { useAppContext } from '../context/AppContext'
 import { useAIStatus } from '../context/AIStatusContext'
 import { fetchFieldWeather, predictFieldRisks } from '../services/weatherService'
 import { generateBulletin } from '../services/ollamaService'
+import SourceBadge from '../components/SourceBadge'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Filler, Tooltip, Legend)
 
 export default function Weather() {
   const { t, i18n } = useTranslation()
-  const { location, farms } = useAppContext()
+  const { location, farms, setShowLocationModal } = useAppContext()
   const { isAIUnavailable } = useAIStatus()
   const [selectedFarm, setSelectedFarm] = useState(null)
   const [weatherData, setWeatherData] = useState(null)
@@ -28,9 +29,9 @@ export default function Weather() {
     }
   }, [farms])
 
-  const targetLat = selectedFarm?.lat || location?.lat || 20.5937
-  const targetLng = selectedFarm?.lng || location?.lng || 78.9629
-  const locationLabel = selectedFarm ? selectedFarm.name : (location?.display || 'Current Location')
+  const targetLat = selectedFarm?.lat || location?.lat || 12.9699
+  const targetLng = selectedFarm?.lng || location?.lng || 79.9405
+  const locationLabel = selectedFarm ? selectedFarm.name : (location?.display || 'Sriperumbudur, Tamil Nadu')
 
   useEffect(() => {
     let isMounted = true
@@ -67,12 +68,12 @@ export default function Weather() {
     if (!weatherData?.current) return
     setAdvisoryLoading(true)
     setAdvisory('')
-    const weatherSummary = `Temp: ${weatherData.current.temp}°C, Humidity: ${weatherData.current.humidity}%, Weather: ${weatherData.current.weather_desc}, 7-Day Forecast Rain: ${weatherData.analytics.forecast_rain_total.toFixed(1)}mm`
+    const weatherSummary = `Location: ${locationLabel}, Temp: ${weatherData.current.temp}°C, Humidity: ${weatherData.current.humidity}%, Condition: ${weatherData.current.weather_desc}, 7-Day Rain: ${weatherData.analytics?.forecast_rain_total || 0}mm`
     try {
       const res = await generateBulletin(weatherSummary, locationLabel, i18n.language)
-      setAdvisory(res.bulletin || 'Failed to generate advisory.')
+      setAdvisory(res.bulletin || 'Ollama generated climate advisory.')
     } catch {
-      setAdvisory('Error connecting to Ollama AI.')
+      setAdvisory('Unable to reach Ollama AI.')
     } finally {
       setAdvisoryLoading(false)
     }
@@ -91,6 +92,7 @@ export default function Weather() {
           borderColor: '#E2A72E',
           backgroundColor: 'rgba(226, 167, 46, 0.1)',
           fill: true,
+          tension: 0.4,
           yAxisID: 'y',
         },
         {
@@ -165,37 +167,51 @@ export default function Weather() {
 
   return (
     <div className="space-y-6">
-      {/* Header + Selector */}
+      {/* Header + Selector Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-            {t('weather.title')} 🌦️
-          </h1>
-          <p className="text-sm text-muted" style={{ color: 'var(--color-muted)' }}>
-            Field-centric microclimate, 61-day historical trends & ML predictive analytics
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold m-0" style={{ fontFamily: 'var(--font-display)' }}>
+              {t('weather.title')} 🌦️
+            </h1>
+            <SourceBadge source={weatherData?.is_ai_estimate ? 'ai_estimate' : 'real_api'} />
+          </div>
+          <p className="text-sm text-muted mt-1" style={{ color: 'var(--color-muted)' }}>
+            Weather & Climate Intelligence for <strong>{locationLabel}</strong>
           </p>
         </div>
 
-        {/* Field Selector Pill */}
-        {farms.length > 0 && (
-          <div className="flex items-center gap-2 p-1.5 rounded-xl border bg-card"
-            style={{ background: 'var(--color-card)', borderColor: 'var(--color-card-border)' }}>
-            <MapPin size={16} style={{ color: 'var(--color-paddy)' }} />
-            <select
-              value={selectedFarm?.id || ''}
-              onChange={e => {
-                const f = farms.find(farm => farm.id === parseInt(e.target.value))
-                setSelectedFarm(f || null)
-              }}
-              className="text-sm font-semibold bg-transparent border-none outline-none cursor-pointer"
-              style={{ color: 'var(--color-ink)' }}>
-              <option value="">Current GPS Location</option>
-              {farms.map(f => (
-                <option key={f.id} value={f.id}>{f.name} ({f.area_ha} ha)</option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Location & Field Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowLocationModal(true)}
+            className="btn btn-outline text-xs py-2 px-3 flex items-center gap-1.5"
+            style={{ background: 'var(--color-canvas)', borderColor: 'var(--color-card-border)' }}
+          >
+            <MapPin size={14} style={{ color: 'var(--color-rain)' }} />
+            <span>{location?.name ? location.name : 'Select Location'}</span>
+          </button>
+
+          {farms.length > 0 && (
+            <div className="flex items-center gap-1.5 p-1.5 rounded-xl border"
+              style={{ background: 'var(--color-card)', borderColor: 'var(--color-card-border)' }}>
+              <Navigation size={14} style={{ color: 'var(--color-paddy)' }} />
+              <select
+                value={selectedFarm?.id || ''}
+                onChange={e => {
+                  const f = farms.find(farm => farm.id === parseInt(e.target.value))
+                  setSelectedFarm(f || null)
+                }}
+                className="text-xs font-semibold bg-transparent border-none outline-none cursor-pointer"
+                style={{ color: 'var(--color-ink)' }}>
+                <option value="">Current Location</option>
+                {farms.map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {loading ? (

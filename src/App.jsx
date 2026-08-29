@@ -10,6 +10,8 @@ import CropLibrary from './pages/CropLibrary'
 import Impact from './pages/Impact'
 import Notifications from './pages/Notifications'
 import Profile from './pages/Profile'
+import MarketPrices from './pages/MarketPrices'
+import LiveMonitoring from './pages/LiveMonitoring'
 import Auth from './pages/Auth'
 
 export default function App() {
@@ -24,6 +26,8 @@ export default function App() {
         <Route path="/chat" element={<AdvisoryChat />} />
         <Route path="/insurance" element={<Insurance />} />
         <Route path="/library" element={<CropLibrary />} />
+        <Route path="/market" element={<MarketPrices />} />
+        <Route path="/monitoring" element={<LiveMonitoring />} />
         <Route path="/impact" element={<Impact />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />

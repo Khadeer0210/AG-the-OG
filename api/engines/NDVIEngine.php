@@ -114,15 +114,22 @@ class NDVIEngine {
         return 0.5; // fallback
     }
 
-    private function computeRainStress() {
-        // Would fetch from WeatherEngine archive in production
-        // Simulated: compare actual vs expected rainfall
-        $actualRain = 285; // mm last 30 days (simulated)
-        $expectedRain = 180; // mm normal
+    private function computeRainStress($actualRain = null, $expectedRain = 180) {
+        if ($actualRain === null) {
+            // Attempt to query recent weather_history if available
+            try {
+                $db = get_db();
+                $stmt = $db->prepare('SELECT SUM(rain_mm) as total_rain FROM weather_history WHERE date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)');
+                $stmt->execute();
+                $row = $stmt->fetch();
+                $actualRain = $row && $row['total_rain'] !== null ? floatval($row['total_rain']) : 180;
+            } catch (Exception $e) {
+                $actualRain = 180;
+            }
+        }
 
         $ratio = $expectedRain > 0 ? $actualRain / $expectedRain : 1;
 
-        // Stress when ratio < 0.5 (drought) or > 1.5 (waterlogging)
         if ($ratio < 0.5) {
             $factor = (0.5 - $ratio) / 0.5;
             $type = 'deficit';
@@ -134,11 +141,11 @@ class NDVIEngine {
             $type = 'normal';
         }
 
-        $factor = min(1.0, $factor);
+        $factor = min(1.0, max(0.0, $factor));
         $stressPct = round($factor * 100, 1);
 
         return [
-            'actual_mm' => $actualRain,
+            'actual_mm' => round($actualRain, 1),
             'expected_mm' => $expectedRain,
             'ratio' => round($ratio, 2),
             'type' => $type,
@@ -147,11 +154,19 @@ class NDVIEngine {
         ];
     }
 
-    private function computeHeatStress() {
-        // Simulated: count days exceeding crop heat threshold
-        $threshold = 35; // °C for paddy
+    private function computeHeatStress($hotDays = null, $threshold = 35) {
         $totalDays = 30;
-        $hotDays = 5; // simulated
+        if ($hotDays === null) {
+            try {
+                $db = get_db();
+                $stmt = $db->prepare('SELECT COUNT(*) as hot_count FROM weather_history WHERE temp_max > ? AND date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)');
+                $stmt->execute([$threshold]);
+                $row = $stmt->fetch();
+                $hotDays = $row ? intval($row['hot_count']) : 2;
+            } catch (Exception $e) {
+                $hotDays = 2;
+            }
+        }
 
         $factor = $totalDays > 0 ? $hotDays / $totalDays : 0;
         $stressPct = round($factor * 100, 1);

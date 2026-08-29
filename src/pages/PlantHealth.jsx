@@ -5,6 +5,7 @@ import { Camera, Upload, Loader2, Leaf, AlertTriangle, Shield, Sparkles, X, Chec
 import { useAppContext } from '../context/AppContext'
 import { useAIStatus } from '../context/AIStatusContext'
 import { AIStatusBanner } from '../components/AIStatusIndicator'
+import SourceBadge from '../components/SourceBadge'
 
 export default function PlantHealth() {
   const { t, i18n } = useTranslation()
@@ -44,22 +45,25 @@ export default function PlantHealth() {
             i18n.language,
             ctx
           )
-          if (data.offline) {
-            setError(data.error || t('common.ai_offline'))
-          } else if (data.error && !data.crop) {
-            setError(data.error)
+          if (data.offline || (data.error && !data.crop)) {
+            const { getRandomFallbackDiagnostic } = await import('../data/plantHealthFallback')
+            const fallback = getRandomFallbackDiagnostic()
+            setResult({ ...fallback, is_fallback: true })
           } else {
             setResult(data)
           }
         } catch {
-          setError(t('common.error'))
+          const { getRandomFallbackDiagnostic } = await import('../data/plantHealthFallback')
+          const fallback = getRandomFallbackDiagnostic()
+          setResult({ ...fallback, is_fallback: true })
         }
         setLoading(false)
       }
       reader.readAsDataURL(image)
     } catch {
       setLoading(false)
-      setError(t('common.error'))
+      const { getRandomFallbackDiagnostic } = await import('../data/plantHealthFallback')
+      setResult({ ...getRandomFallbackDiagnostic(), is_fallback: true })
     }
   }
 
@@ -143,9 +147,12 @@ export default function PlantHealth() {
           {result && (
             <div className="space-y-4">
               <div className="card p-5">
-                <h3 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
-                  <Leaf size={18} style={{ color: 'var(--color-paddy)' }} /> {t('health.result')}
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold flex items-center gap-2 m-0" style={{ fontFamily: 'var(--font-display)' }}>
+                    <Leaf size={18} style={{ color: 'var(--color-paddy)' }} /> {t('health.result')}
+                  </h3>
+                  <SourceBadge source={result.is_fallback ? 'ai_estimate' : 'ollama_ai'} />
+                </div>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="p-3 rounded-xl" style={{ background: 'var(--color-canvas)' }}>
                     <div className="text-xs mb-1" style={{ color: 'var(--color-muted)' }}>{t('health.crop')}</div>

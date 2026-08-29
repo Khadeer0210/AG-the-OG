@@ -228,6 +228,15 @@ export default function LabReportModal({ isOpen, onClose, farm, onSave }) {
             </div>
           </div>
 
+          {values.ai_analysis && (
+            <div className="p-4 rounded-xl text-xs leading-relaxed space-y-1" style={{ background: 'var(--color-paddy-soft)', border: '1px solid rgba(47,125,79,0.2)' }}>
+              <div className="font-bold flex items-center gap-1.5 text-emerald-800">
+                <Sparkles size={14} /> AI Agronomic Prescription
+              </div>
+              <p className="m-0 whitespace-pre-line text-emerald-950">{values.ai_analysis}</p>
+            </div>
+          )}
+
           {error && (
             <div className="text-sm p-3 rounded-xl" style={{ background: 'var(--color-alert-soft)', color: 'var(--color-alert)' }}>
               {error}
@@ -236,13 +245,40 @@ export default function LabReportModal({ isOpen, onClose, farm, onSave }) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t"
+        <div className="flex items-center justify-between px-5 py-4 border-t gap-2 flex-wrap"
           style={{ borderColor: 'var(--color-card-border)', background: 'var(--color-canvas)' }}>
-          <button onClick={onClose} className="btn btn-outline text-sm py-2 px-4">Cancel</button>
-          <button onClick={handleSave} className="btn btn-primary text-sm py-2 px-4"
-            disabled={saving}>
-            {saving ? <><Loader2 size={14} className="animate-spin" /> Saving...</> : <><Save size={14} /> Save Report</>}
+          <button
+            onClick={async () => {
+              if (!values.ph && !values.n && !values.p && !values.k) {
+                setError('Enter parameters first before running AI analysis')
+                return
+              }
+              setSaving(true)
+              try {
+                const prompt = `Analyze soil parameters for field "${farm?.name || 'Field'}": pH=${values.ph || 'N/A'}, N=${values.n || 'N/A'} kg/ha, P=${values.p || 'N/A'} kg/ha, K=${values.k || 'N/A'} kg/ha, Organic C=${values.organic_c || 'N/A'}%. Give 3 specific organic & chemical fertilizer recommendations. Under 100 words.`
+                const { chat: ollamaChat } = await import('../services/ollamaService')
+                const res = await ollamaChat(prompt, [], 'en', {})
+                if (res.reply) {
+                  setValues(prev => ({ ...prev, ai_analysis: res.reply }))
+                }
+              } catch {
+                setError('AI analysis failed — check Ollama connection')
+              } finally {
+                setSaving(false)
+              }
+            }}
+            className="btn btn-outline text-xs py-2 px-3 text-emerald-700 border-emerald-300"
+            disabled={saving}
+          >
+            <Sparkles size={14} className="text-emerald-600" /> Analyze with AI
           </button>
+
+          <div className="flex items-center gap-2">
+            <button onClick={onClose} className="btn btn-outline text-sm py-2 px-4">Cancel</button>
+            <button onClick={handleSave} className="btn btn-primary text-sm py-2 px-4" disabled={saving}>
+              {saving ? <><Loader2 size={14} className="animate-spin" /> Saving...</> : <><Save size={14} /> Save Report</>}
+            </button>
+          </div>
         </div>
       </div>
     </div>
