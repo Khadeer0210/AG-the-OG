@@ -116,8 +116,8 @@ export default function Dashboard() {
           loop 
           muted 
           playsInline 
-          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260818_072341_50851634-bbc3-4c33-9acc-7647d4db44aa.mp4"
-          className="absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none z-0"
+          src="/bg-video.mp4"
+          className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none z-0"
         />
 
         <div className="relative z-10 p-8 sm:p-12 flex flex-col items-center text-center max-w-4xl mx-auto">
