@@ -108,39 +108,95 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Hero Greeting & Location Bar */}
-      <div className="card p-7 sm:p-9 relative overflow-hidden" style={{
-        background: 'linear-gradient(135deg, rgba(46,125,79,0.08) 0%, rgba(232,163,61,0.12) 100%)',
-        borderColor: 'rgba(20, 67, 42, 0.12)',
-        borderRadius: 'var(--radius-card)',
-      }}>
-        {/* Decorative ambient leaf pattern blur */}
-        <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
-          style={{ background: 'var(--sprout)' }} />
+      {/* Vesper.ai Operational AI Infrastructure Hero Component */}
+      <div className="vesper-hero-card relative overflow-hidden">
+        {/* Background video overlay */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260818_072341_50851634-bbc3-4c33-9acc-7647d4db44aa.mp4"
+          className="absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none z-0"
+        />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <div className="eyebrow-label">
-              <Cpu size={13} /> Edge-AI Digital Twin Enabled
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
-              {getTimeOfDay()}, <span className="text-gold-italic">{userName}</span> 🌱
-            </h1>
-            <p className="text-xs sm:text-sm flex items-center gap-2 font-semibold" style={{ color: 'var(--color-muted)' }}>
-              <span className="flex items-center gap-1 text-[var(--leaf)]">
-                <MapPin size={15} /> {location?.display || t('common.loading')}
-              </span>
-              <span className="text-gray-300">·</span>
-              <span>{new Date().toLocaleDateString(i18n.language === 'en' ? 'en-IN' : `${i18n.language}-IN`, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-            </p>
+        <div className="relative z-10 p-8 sm:p-12 flex flex-col items-center text-center max-w-4xl mx-auto">
+          {/* Vesper Badge */}
+          <div className="badge-vesper">
+            <svg className="badge-star" viewBox="0 0 24 24">
+              <path d="M12 2.6C12.55 2.6 12.88 3.15 13.08 4.7c.62 4.7 1.52 5.6 6.22 6.22 1.55.2 2.1.53 2.1 1.08s-.55.88-2.1 1.08c-4.7.62-5.6 1.52-6.22 6.22-.2 1.55-.53 2.1-1.08 2.1s-.88-.55-1.08-2.1c-.62-4.7-1.52-5.6-6.22-6.22C3.15 12.88 2.6 12.55 2.6 12s.55-.88 2.1-1.08c4.7-.62 5.6-1.52 6.22-6.22C11.12 3.15 11.45 2.6 12 2.6Z"/>
+            </svg>
+            <span>Operational AI Infrastructure · {location?.display || 'Active Region'}</span>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <Link to="/farm" className="btn btn-primary text-xs font-bold py-3 px-5 no-underline shadow-md">
-              <PlusCircle size={16} /> {t('dashboard.add_crop')}
+
+          {/* Vesper Headline */}
+          <h1 className="text-3xl sm:text-5xl font-medium tracking-tight leading-tight mb-4 text-white">
+            Train <em className="font-serif-italic text-gray-400">AI agents</em> on your farm workflows in minutes.
+          </h1>
+
+          {/* Vesper Lede */}
+          <p className="text-sm sm:text-base text-gray-400 max-w-xl mb-8 font-normal leading-relaxed">
+            Deploy adaptive AI agents that learn, execute, and scale operational tasks across your agricultural fields.
+          </p>
+
+          {/* Vesper Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link to="/farm" className="btn-vesper-solid no-underline flex items-center gap-2">
+              <PlusCircle size={16} /> Add Crop Workflow
             </Link>
-            <Link to="/health" className="btn btn-outline text-xs font-bold py-3 px-5 no-underline bg-white">
-              <Camera size={16} /> {t('dashboard.scan_plant')}
+            <Link to="/health" className="btn-vesper-ghost no-underline flex items-center gap-2">
+              <Camera size={16} /> Scan Plant Health
             </Link>
+          </div>
+        </div>
+
+        {/* Vesper Stats Footer Bar */}
+        <div className="vesper-stats-bar flex-col sm:flex-row">
+          <div className="flex items-center gap-3">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <defs>
+                <linearGradient id="v_g1" x1="3" y1="2" x2="14" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.38"/>
+                  <stop offset="100%" stopColor="#3a3a3a" stopOpacity="0.62"/>
+                </linearGradient>
+                <linearGradient id="v_g2" x1="3" y1="2" x2="14" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#3a3a3a" stopOpacity="0.38"/>
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.62"/>
+                </linearGradient>
+              </defs>
+              <rect x="3.4" y="2.6" width="7.2" height="18.8" rx="3.6" fill="url(#v_g1)"/>
+              <rect x="13.4" y="2.6" width="7.2" height="18.8" rx="3.6" fill="url(#v_g2)"/>
+              <rect x="9.2" y="10.9" width="5.6" height="2.2" rx="1.1" fill="#4a4a4a"/>
+            </svg>
+            <span><strong>4.2M+</strong> workflows automated</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <rect x="2.4" y="2.4" width="19.2" height="19.2" rx="6.2" fill="#ffffff"/>
+              <path d="M12 7.1v7.4M8.15 12.35L12 16.2l3.85-3.85" stroke="#111111" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            </svg>
+            <span><strong>92%</strong> reduction in manual operations</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <svg className="stat-icon-wide" width="38" height="21" viewBox="0 0 40 22">
+              <circle cx="10.2" cy="11" r="9.2" fill="#2b2b2b"/>
+              <ellipse cx="10.2" cy="12.1" rx="4.15" ry="3.7" fill="#f4f4f4"/>
+              <path d="M7.5 7.5L9 9.5M13 7.5L11.5 9.5" stroke="#2b2b2b" strokeWidth="1.2" strokeLinecap="round"/>
+              <circle cx="9" cy="11" r="0.7" fill="#1a1a1a"/>
+              <circle cx="11.4" cy="11" r="0.7" fill="#1a1a1a"/>
+
+              <circle cx="20.2" cy="11" r="9.2" fill="#ffffff"/>
+              <circle cx="18" cy="10" r="1.7" fill="#111111"/>
+              <circle cx="22.4" cy="10" r="1.7" fill="#111111"/>
+              <ellipse cx="20.2" cy="12.2" rx="1.2" ry="0.8" fill="#111111"/>
+              <path d="M18 14c1 1.2 3.4 1.2 4.4 0" stroke="#111111" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+
+              <circle cx="30.2" cy="11" r="9.2" fill="#f26b1d"/>
+              <text x="30.2" y="15.1" fontFamily="'Inter', sans-serif" fontWeight="700" fontSize="12.5" fill="#ffffff" textAnchor="middle">e</text>
+            </svg>
+            <span><strong>180+</strong> operational teams onboarded</span>
           </div>
         </div>
       </div>
