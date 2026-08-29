@@ -115,11 +115,18 @@ export default function MyFarm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl" style={{ fontFamily: 'var(--font-display)' }}>{t('farm.title')} 🌾</h1>
-        <button className="btn btn-primary text-sm" onClick={() => { setEditFarm(null); setShowAddModal(true) }}>
-          <PlusCircle size={15} /> {t('farm.add_farm')}
-        </button>
+      <div>
+        <div className="eyebrow-label">
+          <Sprout size={13} /> Digital Twin & Field Management
+        </div>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h1 className="text-3xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+            {t('farm.title')} <span className="text-gold-italic">Intelligence</span> 🌾
+          </h1>
+          <button className="btn btn-primary text-xs font-bold py-2.5 px-4 shadow-md" onClick={() => { setEditFarm(null); setShowAddModal(true) }}>
+            <PlusCircle size={15} /> {t('farm.add_farm')}
+          </button>
+        </div>
       </div>
 
       {/* Farm Selector Cards */}

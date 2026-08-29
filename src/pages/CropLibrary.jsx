@@ -43,22 +43,21 @@ export default function CropLibrary() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header Banner */}
-      <div className="card p-6 sm:p-8 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, var(--color-turmeric-soft) 0%, var(--color-card) 60%, var(--color-paddy-soft) 100%)' }}>
+      <div className="card p-7 sm:p-9 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, rgba(232,163,61,0.12) 0%, #FFFFFF 50%, rgba(46,125,79,0.08) 100%)' }}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-2"
-              style={{ background: 'var(--color-paddy-soft)', color: 'var(--color-paddy)' }}>
+            <div className="eyebrow-label">
               <Sprout size={13} /> {CROPS.length} Interactive Agronomy Guides
             </div>
-            <h1 className="text-2xl sm:text-3xl m-0" style={{ fontFamily: 'var(--font-display)' }}>
-              {t('library.title')} 📚
+            <h1 className="text-3xl sm:text-4xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+              {t('library.title')} <span className="text-gold-italic">Encyclopedia</span> 📚
             </h1>
-            <p className="text-xs sm:text-sm mt-1 m-0" style={{ color: 'var(--color-muted)' }}>
+            <p className="text-xs sm:text-sm mt-1 m-0 font-semibold" style={{ color: 'var(--color-muted)' }}>
               Explore comprehensive scientific guides, soil requirements, water metrics, and disease diagnostics for Indian crops.
             </p>
           </div>
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl animate-float shadow-sm"
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm"
             style={{ background: '#fff' }}>
             🌱
           </div>

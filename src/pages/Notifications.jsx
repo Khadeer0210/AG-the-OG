@@ -38,9 +38,16 @@ export default function Notifications() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl" style={{ fontFamily: 'var(--font-display)' }}>{t('nav.notifications')} 🔔</h1>
-        <span className="chip chip-danger">{alerts.filter(a => !a.read).length} {t('notifications.unread')}</span>
+      <div>
+        <div className="eyebrow-label">
+          <Bell size={13} /> Real-Time Outbreak & Climate Alerts
+        </div>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+            {t('nav.notifications')} <span className="text-gold-italic">Center</span> 🔔
+          </h1>
+          <span className="chip chip-danger">{alerts.filter(a => !a.read).length} {t('notifications.unread')}</span>
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>

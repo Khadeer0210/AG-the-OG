@@ -83,9 +83,16 @@ export default function Insurance() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl" style={{ fontFamily: 'var(--font-display)' }}>{t('insurance.title')} 🛡️</h1>
-        {assessment?.source && <SourceBadge source={assessment.source === 'frontend_estimate' ? 'calculated' : 'real_api'} />}
+      <div>
+        <div className="eyebrow-label">
+          <Shield size={13} /> Parametric Claim & Satellite Evidence Engine
+        </div>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h1 className="text-3xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+            {t('insurance.title')} <span className="text-gold-italic">Protection</span> 🛡️
+          </h1>
+          {assessment?.source && <SourceBadge source={assessment.source === 'frontend_estimate' ? 'calculated' : 'real_api'} />}
+        </div>
       </div>
 
       {/* Farm + Crop Selector */}

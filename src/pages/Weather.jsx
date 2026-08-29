@@ -193,14 +193,17 @@ export default function Weather() {
       {/* Header + Selector Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold m-0" style={{ fontFamily: 'var(--font-display)' }}>
-              {t('weather.title')} 🌦️
+          <div className="eyebrow-label">
+            <CloudSun size={13} /> Climate & Telemetry Intelligence
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+              {t('weather.title')} <span className="text-gold-italic">Radar</span> 🌦️
             </h1>
             <SourceBadge source={sourceLabel} />
           </div>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
-            Weather & Climate Intelligence for <strong>{locationLabel}</strong> — <em>{sourceText}</em>
+          <p className="text-xs sm:text-sm mt-1 font-medium" style={{ color: 'var(--color-muted)' }}>
+            Weather & Climate Intelligence for <strong style={{ color: 'var(--leaf)' }}>{locationLabel}</strong> — <em>{sourceText}</em>
           </p>
         </div>
 

@@ -58,16 +58,20 @@ export default function MarketPrices() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold m-0" style={{ fontFamily: 'var(--font-display)' }}>Market Prices 📊</h1>
-          <p className="text-sm m-0" style={{ color: 'var(--color-muted)' }}>Live commodity prices for Tamil Nadu markets</p>
+      <div>
+        <div className="eyebrow-label">
+          <Store size={13} /> Agmarknet Live Commodity Feed
         </div>
-        <div className="flex items-center gap-2">
-          <SourceBadge source={source} />
-          <button onClick={loadPrices} className="btn btn-outline text-xs py-2 px-3" disabled={loading}>
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
-          </button>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h1 className="text-3xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+            Market <span className="text-gold-italic">Intelligence</span> 📊
+          </h1>
+          <div className="flex items-center gap-2">
+            <SourceBadge source={source} />
+            <button onClick={loadPrices} className="btn btn-outline text-xs py-2 px-3" disabled={loading}>
+              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
+            </button>
+          </div>
         </div>
       </div>
 

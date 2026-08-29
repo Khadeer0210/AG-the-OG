@@ -51,22 +51,26 @@ export default function LiveMonitoring() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold m-0" style={{ fontFamily: 'var(--font-display)' }}>Live Monitoring 📡</h1>
-          <p className="text-sm m-0" style={{ color: 'var(--color-muted)' }}>Real-time field metrics with 30s auto-refresh</p>
+      <div>
+        <div className="eyebrow-label">
+          <Activity size={13} /> Real-Time Satellite & Sensor Telemetry
         </div>
-        <div className="flex items-center gap-2">
-          {farms.length > 0 && (
-            <select value={selectedFarm?.id || ''} onChange={e => { const f = farms.find(x => x.id === parseInt(e.target.value)); if (f) selectFarm(f) }}
-              className="input text-xs py-1.5 px-3" style={{ appearance: 'auto' }}>
-              {farms.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-          )}
-          <SourceBadge source="real_api" />
-          <button onClick={() => { setLoading(true); loadData() }} className="btn btn-outline text-xs py-2 px-3">
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          </button>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h1 className="text-3xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+            Live <span className="text-gold-italic">Monitoring</span> 📡
+          </h1>
+          <div className="flex items-center gap-2">
+            {farms.length > 0 && (
+              <select value={selectedFarm?.id || ''} onChange={e => { const f = farms.find(x => x.id === parseInt(e.target.value)); if (f) selectFarm(f) }}
+                className="input text-xs py-1.5 px-3" style={{ appearance: 'auto' }}>
+                {farms.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            )}
+            <SourceBadge source="real_api" />
+            <button onClick={() => { setLoading(true); loadData() }} className="btn btn-outline text-xs py-2 px-3">
+              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            </button>
+          </div>
         </div>
       </div>
 

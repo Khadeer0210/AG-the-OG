@@ -58,14 +58,14 @@ export default function Impact() {
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Header Banner */}
       <div className="card p-8 text-center relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, var(--color-paddy-soft) 0%, var(--color-card) 60%, var(--color-rain-soft) 100%)' }}>
-        <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-sm" style={{ background: '#fff' }}>
-          <Sparkles size={32} style={{ color: 'var(--color-paddy)' }} />
+        style={{ background: 'linear-gradient(135deg, rgba(46,125,79,0.08) 0%, #FFFFFF 60%, rgba(42,107,151,0.08) 100%)' }}>
+        <div className="eyebrow-label mx-auto mb-2">
+          <Leaf size={13} /> Sustainability & SDG Alignment
         </div>
-        <h1 className="text-3xl sm:text-4xl mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('impact.title')} 🌱
+        <h1 className="text-3xl sm:text-4xl font-extrabold mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+          {t('impact.title')} <span className="text-gold-italic">Footprint</span> 🌱
         </h1>
-        <p className="text-sm sm:text-base max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--color-muted)' }}>
+        <p className="text-sm sm:text-base max-w-2xl mx-auto leading-relaxed font-semibold" style={{ color: 'var(--color-muted)' }}>
           {t('impact.subtitle')} — {hasRealData ? 'calculated from your real farm data' : 'register farms to see personalized metrics'}.
         </p>
       </div>

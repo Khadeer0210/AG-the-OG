@@ -146,6 +146,12 @@ export default function Profile() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      <div>
+        <div className="eyebrow-label">
+          <User size={13} /> Farmer Digital Identity & Preferences
+        </div>
+      </div>
+
       {/* Toast Notification */}
       {savedToast && (
         <div className="fixed top-20 right-6 z-50 px-5 py-3 rounded-2xl bg-emerald-700 text-white font-bold text-sm shadow-2xl flex items-center gap-2.5 animate-bounce">
@@ -155,7 +161,7 @@ export default function Profile() {
 
       {/* Hero Profile Header */}
       <div className="card p-6 sm:p-8 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, var(--color-card) 0%, var(--color-paddy-soft) 100%)' }}>
+        style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, rgba(46,125,79,0.08) 100%)' }}>
         <div className="flex flex-col sm:flex-row items-center gap-6">
           {/* Avatar Container */}
           <div className="relative">

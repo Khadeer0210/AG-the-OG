@@ -169,16 +169,21 @@ export default function PlantHealth() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl m-0" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('health.title')} 🔬
-        </h1>
-        <button
-          onClick={() => setShowHistory(!showHistory)}
-          className="btn btn-outline text-xs py-2 px-3 flex items-center gap-1.5"
-        >
-          <History size={14} /> {scanHistory.length} Scans
-        </button>
+      <div>
+        <div className="eyebrow-label">
+          <Leaf size={13} /> LLaVA Vision Diagnostic Hub
+        </div>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+            {t('health.title')} <span className="text-gold-italic">Analyzer</span> 🔬
+          </h1>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="btn btn-outline text-xs py-2 px-4 flex items-center gap-1.5"
+          >
+            <History size={14} /> {scanHistory.length} Scans
+          </button>
+        </div>
       </div>
 
       {/* AI Status Banner */}

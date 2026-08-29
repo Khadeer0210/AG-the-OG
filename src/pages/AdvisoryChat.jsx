@@ -133,9 +133,15 @@ export default function AdvisoryChat() {
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <h1 className="text-2xl m-0" style={{ fontFamily: 'var(--font-display)' }}>{t('chat.title')} 🌾</h1>
-        <div className="flex items-center gap-2">
+      <div className="mb-4">
+        <div className="eyebrow-label">
+          <Sparkles size={13} /> Multilingual Edge-AI Assistant
+        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h1 className="text-3xl font-extrabold m-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+            {t('chat.title')} <span className="text-gold-italic">Advisory</span> 🌾
+          </h1>
+          <div className="flex items-center gap-2">
           {farms.length > 0 && (
             <select
               value={selectedFarm?.id || ''}
@@ -154,6 +160,7 @@ export default function AdvisoryChat() {
           </button>
         </div>
       </div>
+    </div>
 
       {/* AI Status Banner */}
       <AIStatusBanner className="mb-2" />

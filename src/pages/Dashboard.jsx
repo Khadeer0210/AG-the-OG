@@ -109,33 +109,37 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Hero Greeting & Location Bar */}
-      <div className="card p-6 sm:p-7 relative overflow-hidden" style={{
-        background: 'linear-gradient(135deg, rgba(47,125,79,0.06) 0%, rgba(226,167,46,0.08) 100%)',
-        border: '1px solid var(--color-card-border)',
+      <div className="card p-7 sm:p-9 relative overflow-hidden" style={{
+        background: 'linear-gradient(135deg, rgba(46,125,79,0.08) 0%, rgba(232,163,61,0.12) 100%)',
+        borderColor: 'rgba(20, 67, 42, 0.12)',
+        borderRadius: 'var(--radius-card)',
       }}>
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        {/* Decorative ambient leaf pattern blur */}
+        <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
+          style={{ background: 'var(--sprout)' }} />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-2" style={{
-              background: 'var(--color-paddy-soft)', color: 'var(--color-paddy)', border: '1px solid rgba(47,125,79,0.2)',
-            }}>
+            <div className="eyebrow-label">
               <Cpu size={13} /> Edge-AI Digital Twin Enabled
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold mb-1 tracking-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>
-              {t('dashboard.greeting', { timeOfDay: getTimeOfDay(), name: userName })} 🌱
+            <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}>
+              {getTimeOfDay()}, <span className="text-gold-italic">{userName}</span> 🌱
             </h1>
-            <p className="text-xs sm:text-sm flex items-center gap-1.5 font-medium" style={{ color: 'var(--color-muted)' }}>
-              <MapPin size={14} style={{ color: 'var(--color-paddy)' }} />
-              <span>{location?.display || t('common.loading')}</span>
-              <span>·</span>
+            <p className="text-xs sm:text-sm flex items-center gap-2 font-semibold" style={{ color: 'var(--color-muted)' }}>
+              <span className="flex items-center gap-1 text-[var(--leaf)]">
+                <MapPin size={15} /> {location?.display || t('common.loading')}
+              </span>
+              <span className="text-gray-300">·</span>
               <span>{new Date().toLocaleDateString(i18n.language === 'en' ? 'en-IN' : `${i18n.language}-IN`, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to="/farm" className="btn btn-paddy text-xs font-bold py-2.5 px-4 no-underline shadow-md">
-              <PlusCircle size={15} /> {t('dashboard.add_crop')}
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link to="/farm" className="btn btn-primary text-xs font-bold py-3 px-5 no-underline shadow-md">
+              <PlusCircle size={16} /> {t('dashboard.add_crop')}
             </Link>
-            <Link to="/health" className="btn btn-outline text-xs font-bold py-2.5 px-4 no-underline bg-white">
-              <Camera size={15} /> {t('dashboard.scan_plant')}
+            <Link to="/health" className="btn btn-outline text-xs font-bold py-3 px-5 no-underline bg-white">
+              <Camera size={16} /> {t('dashboard.scan_plant')}
             </Link>
           </div>
         </div>
