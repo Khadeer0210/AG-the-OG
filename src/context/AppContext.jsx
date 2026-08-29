@@ -108,55 +108,88 @@ export function AppProvider({ children }) {
     )
   }, [updateLocation])
 
-  // Fetch current weather
+  // Fetch current weather: PHP → Open-Meteo → Ollama AI → Static fallback
   const fetchWeather = async (lat, lng) => {
     setWeatherLoading(true)
+
+    // Step 1: Try PHP backend
     try {
-      const res = await fetch(`/api/weather.php?action=current&lat=${lat}&lng=${lng}`)
+      const res = await fetch(`/api/weather.php?action=current&lat=${lat}&lng=${lng}`, { signal: AbortSignal.timeout(5000) })
       if (res.ok) {
         const data = await res.json()
-        setWeather(data)
-      } else {
-        // Direct Open-Meteo fallback (bypass PHP)
-        await fetchWeatherDirect(lat, lng)
+        if (data && data.temp != null) {
+          setWeather(data)
+          setWeatherLoading(false)
+          return
+        }
       }
-    } catch {
-      await fetchWeatherDirect(lat, lng)
-    } finally {
-      setWeatherLoading(false)
-    }
-  }
+    } catch { /* continue to fallback */ }
 
-  // Direct Open-Meteo fetch (if PHP backend not available)
-  const fetchWeatherDirect = async (lat, lng) => {
+    // Step 2: Try Open-Meteo direct
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&timezone=auto`
-      const res = await fetch(url)
-      const data = await res.json()
-      const c = data.current || {}
-      const weatherCodeMap = {
-        0: ['Clear sky', '☀️'], 1: ['Mainly clear', '🌤️'], 2: ['Partly cloudy', '⛅'],
-        3: ['Overcast', '☁️'], 45: ['Fog', '🌫️'], 48: ['Rime fog', '🌫️'],
-        51: ['Light drizzle', '🌦️'], 53: ['Drizzle', '🌦️'], 55: ['Dense drizzle', '🌦️'],
-        61: ['Slight rain', '🌧️'], 63: ['Moderate rain', '🌧️'], 65: ['Heavy rain', '🌧️'],
-        80: ['Slight showers', '🌧️'], 81: ['Moderate showers', '🌧️'], 82: ['Violent showers', '🌧️'],
-        95: ['Thunderstorm', '⛈️'], 96: ['Thunderstorm + hail', '⛈️'], 99: ['Severe thunderstorm', '⛈️'],
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
+      if (res.ok) {
+        const data = await res.json()
+        const c = data.current || {}
+        const weatherCodeMap = {
+          0: ['Clear sky', '☀️'], 1: ['Mainly clear', '🌤️'], 2: ['Partly cloudy', '⛅'],
+          3: ['Overcast', '☁️'], 45: ['Fog', '🌫️'], 48: ['Rime fog', '🌫️'],
+          51: ['Light drizzle', '🌦️'], 53: ['Drizzle', '🌦️'], 55: ['Dense drizzle', '🌦️'],
+          61: ['Slight rain', '🌧️'], 63: ['Moderate rain', '🌧️'], 65: ['Heavy rain', '🌧️'],
+          80: ['Slight showers', '🌧️'], 81: ['Moderate showers', '🌧️'], 82: ['Violent showers', '🌧️'],
+          95: ['Thunderstorm', '⛈️'], 96: ['Thunderstorm + hail', '⛈️'], 99: ['Severe thunderstorm', '⛈️'],
+        }
+        const code = c.weather_code ?? 0
+        const [condition, icon] = weatherCodeMap[code] || ['Unknown', '🌡️']
+        setWeather({
+          temp: c.temperature_2m ?? 0,
+          humidity: c.relative_humidity_2m ?? 0,
+          feels_like: c.apparent_temperature ?? 0,
+          precipitation: c.precipitation ?? 0,
+          wind_speed: c.wind_speed_10m ?? 0,
+          condition,
+          icon,
+          source: 'Open-Meteo',
+        })
+        setWeatherLoading(false)
+        return
       }
-      const code = c.weather_code ?? 0
-      const [condition, icon] = weatherCodeMap[code] || ['Unknown', '🌡️']
-      setWeather({
-        temp: c.temperature_2m ?? 0,
-        humidity: c.relative_humidity_2m ?? 0,
-        feels_like: c.apparent_temperature ?? 0,
-        precipitation: c.precipitation ?? 0,
-        wind_speed: c.wind_speed_10m ?? 0,
-        condition,
-        icon,
-        source: 'Open-Meteo (direct)',
-      })
-    } catch {
-      setWeather(null)
-    }
+    } catch { /* continue to Ollama fallback */ }
+
+    // Step 3: Try Ollama AI weather
+    try {
+      const { fetchOllamaWeather } = await import('../services/ollamaService')
+      const locName = location?.display || location?.name || 'Selected Location'
+      const ollamaRes = await fetchOllamaWeather(locName, lat, lng)
+      if (ollamaRes && ollamaRes.success) {
+        setWeather({
+          temp: ollamaRes.temp || 30,
+          humidity: ollamaRes.humidity || 70,
+          feels_like: ollamaRes.feels_like || 32,
+          precipitation: ollamaRes.precipitation || 0,
+          wind_speed: ollamaRes.wind_speed || 10,
+          condition: ollamaRes.weather_desc || 'AI Generated Weather',
+          icon: ollamaRes.weather_icon || '⛅',
+          source: 'Ollama AI',
+        })
+        setWeatherLoading(false)
+        return
+      }
+    } catch { /* continue to static fallback */ }
+
+    // Step 4: Static fallback — always works
+    setWeather({
+      temp: 30,
+      humidity: 72,
+      feels_like: 33,
+      precipitation: 0,
+      wind_speed: 12,
+      condition: 'Partly Cloudy (Estimated)',
+      icon: '⛅',
+      source: 'Local Estimate',
+    })
+    setWeatherLoading(false)
   }
 
   // Fetch market data

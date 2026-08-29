@@ -301,6 +301,55 @@ export async function analyzePlant(imageBase64, message = '', language = 'en', c
 }
 
 /**
+ * Generate full weather forecast and metrics using Ollama AI
+ */
+export async function fetchOllamaWeather(locationName, lat, lng) {
+  const prompt = `Generate realistic current weather and 7-day agricultural weather forecast for "${locationName}" (Coordinates: ${lat}, ${lng}). 
+Reply ONLY as valid JSON in this exact structure, with no extra text or markdown tags:
+{
+  "temp": 31,
+  "humidity": 72,
+  "feels_like": 34,
+  "precipitation": 0.5,
+  "weather_desc": "Partly Cloudy with light breeze",
+  "weather_icon": "⛅",
+  "wind_speed": 12,
+  "soil_moisture_pct": 65,
+  "soil_temp_c": 28,
+  "forecast": [
+    {"date": "Day 1", "temp_max": 33, "temp_min": 23, "rain_mm": 0, "condition": "Sunny"},
+    {"date": "Day 2", "temp_max": 32, "temp_min": 24, "rain_mm": 2, "condition": "Light Shower"},
+    {"date": "Day 3", "temp_max": 31, "temp_min": 23, "rain_mm": 5, "condition": "Moderate Rain"},
+    {"date": "Day 4", "temp_max": 30, "temp_min": 22, "rain_mm": 0, "condition": "Partly Cloudy"},
+    {"date": "Day 5", "temp_max": 33, "temp_min": 24, "rain_mm": 0, "condition": "Sunny"},
+    {"date": "Day 6", "temp_max": 34, "temp_min": 25, "rain_mm": 0, "condition": "Clear Sky"},
+    {"date": "Day 7", "temp_max": 32, "temp_min": 23, "rain_mm": 1, "condition": "Passing Clouds"}
+  ],
+  "bulletin": "1. Keep drainage open for expected rains on Day 3. 2. Soil moisture is optimal for crop growth. 3. Monitor for fungal spores during humid mornings."
+}`
+
+  const messages = [
+    { role: 'system', content: 'You are an agricultural meteorology AI. Respond ONLY with valid raw JSON.' },
+    { role: 'user', content: prompt }
+  ]
+
+  const reply = await callWithRetry(messages, { num_predict: 500, temperature: 0.4 }, TIMEOUT_ANALYSIS)
+
+  if (reply) {
+    try {
+      const jsonMatch = reply.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        return { ...parsed, success: true, is_ollama: true }
+      }
+    } catch (e) {
+      console.warn('[Ollama Weather] JSON parse failed, falling back:', e.message)
+    }
+  }
+  return { success: false, offline: true }
+}
+
+/**
  * Generate weather advisory bulletin
  */
 export async function generateBulletin(weatherData, locationName, language = 'en', context = {}) {

@@ -111,8 +111,113 @@ export async function fetchFieldWeather(lat, lng) {
     setCache(key, result)
     return result
   } catch (err) {
-    console.warn('[Weather] Open-Meteo Fetch failed, using location-based fallback:', err.message)
+    console.warn('[Weather] Open-Meteo Fetch failed, attempting Ollama AI Weather:', err.message)
+    const ollamaWeather = await fetchWeatherFromOllama(lat, lng, 'Selected Location')
+    if (ollamaWeather) return ollamaWeather
     return generateFallbackWeatherData(lat, lng)
+  }
+}
+
+/**
+ * Fetch and build complete weather object using Ollama AI
+ */
+export async function fetchWeatherFromOllama(lat = 12.9699, lng = 79.9405, locationName = 'Selected Location') {
+  try {
+    const { fetchOllamaWeather } = await import('./ollamaService')
+    const res = await fetchOllamaWeather(locationName, lat, lng)
+    if (!res || !res.success) return null
+
+    const now = new Date()
+    const todayStr = now.toISOString().split('T')[0]
+
+    const forecast = (res.forecast || []).map((f, i) => {
+      const d = new Date(now)
+      d.setDate(d.getDate() + i)
+      return {
+        date: d.toISOString().split('T')[0],
+        temp_max: f.temp_max || 32,
+        temp_min: f.temp_min || 23,
+        precipitation: f.rain_mm || 0,
+        rain: f.rain_mm || 0,
+        weather_desc: f.condition || 'Partly Cloudy',
+        weather_icon: (f.condition || '').toLowerCase().includes('rain') ? '🌧️' : '⛅',
+        precip_probability: (f.rain_mm || 0) > 0 ? 70 : 15,
+        wind_max: 12,
+      }
+    })
+
+    // Construct 24 hourly values
+    const hourly = []
+    for (let h = 0; h < 24; h++) {
+      const t = new Date(now)
+      t.setHours(h, 0, 0, 0)
+      hourly.push({
+        time: t.toISOString(),
+        temp: Math.round((res.temp || 30) - 4 + Math.sin((h - 6) / 4) * 6),
+        humidity: Math.round((res.humidity || 70) + Math.cos((h - 6) / 4) * 10),
+        rain: h === 14 ? (res.precipitation || 0) : 0,
+        precip_probability: h === 14 ? 50 : 10,
+      })
+    }
+
+    // Construct soil array
+    const soilData = []
+    for (let i = -14; i <= 0; i++) {
+      const d = new Date(now)
+      d.setDate(d.getDate() + i)
+      soilData.push({
+        date: d.toISOString().split('T')[0],
+        soil_temp_0cm: (res.soil_temp_c || 28) + (Math.random() * 2 - 1),
+        soil_temp_6cm: (res.soil_temp_c || 28) - 1,
+        soil_temp_18cm: (res.soil_temp_c || 28) - 2,
+        soil_moisture_1_3cm: (res.soil_moisture_pct ? res.soil_moisture_pct / 100 : 0.24),
+        soil_moisture_9_27cm: (res.soil_moisture_pct ? res.soil_moisture_pct / 100 + 0.05 : 0.30),
+      })
+    }
+
+    return {
+      is_ai_estimate: true,
+      is_ollama: true,
+      current: {
+        temp: res.temp || 31,
+        humidity: res.humidity || 72,
+        feels_like: res.feels_like || 34,
+        precipitation: res.precipitation || 0,
+        rain: res.precipitation || 0,
+        weather_code: 2,
+        weather_desc: res.weather_desc || 'Generated via Ollama AI',
+        weather_icon: res.weather_icon || '⛅',
+        wind_speed: res.wind_speed || 12,
+        wind_dir: 160,
+        time: now.toISOString(),
+      },
+      daily: forecast,
+      historical: [],
+      forecast,
+      hourly,
+      soilData,
+      bulletin: res.bulletin || '',
+      analytics: {
+        avg_temp_7d: res.temp || 30,
+        total_rain_7d: forecast.reduce((acc, f) => acc + f.precipitation, 0),
+        total_rain_30d: 65,
+        max_temp_7d: Math.max(...forecast.map(f => f.temp_max)),
+        min_temp_7d: Math.min(...forecast.map(f => f.temp_min)),
+        rainy_days_30d: forecast.filter(f => f.precipitation > 0).length,
+        dry_spell: 3,
+        heat_stress_days: forecast.filter(f => f.temp_max > 35).length,
+        forecast_rain_total: forecast.reduce((acc, f) => acc + f.precipitation, 0),
+        forecast_rain_probability: 50,
+      },
+      risks: [
+        { type: 'ollama_ai', severity: 'low', desc: 'Forecast synthesized by local Ollama AI model' }
+      ],
+      location: { lat, lng },
+      fetched_at: now.toISOString(),
+    }
+  } catch (e) {
+    console.warn('[Ollama Weather Service] Error:', e.message)
+    return null
   }
 }
 
