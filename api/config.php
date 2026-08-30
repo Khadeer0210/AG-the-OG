@@ -3,14 +3,14 @@
 // AGRI VISION — Configuration
 // ═══════════════════════════════════════════════════════
 
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'agrivision');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_PORT', 3306);
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'agrivision');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+define('DB_PORT', getenv('DB_PORT') ?: 3306);
 
-define('OLLAMA_URL', 'http://127.0.0.1:11434');
-define('OLLAMA_MODEL', 'gemma4:latest');
+define('OLLAMA_URL', getenv('OLLAMA_URL') ?: 'http://127.0.0.1:11434');
+define('OLLAMA_MODEL', getenv('OLLAMA_MODEL') ?: 'gemma4:latest');
 
 // AI Orchestrator configuration
 define('AI_MODELS', 'gemma3:4b,gemma4:latest');  // Preference order (first available wins)
